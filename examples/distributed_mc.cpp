@@ -53,7 +53,8 @@ static double run_distributed(int workers, double S, double K, double r, double 
             ::close(fds[0]);
             std::vector<double> part(hi[w] - lo[w]);
             mc::fill_block_sums(call, S, r, sigma, T, n_paths, B, lo[w], hi[w], 12345, part.data());
-            ::write(fds[1], part.data(), part.size() * sizeof(double));
+            const ssize_t want = static_cast<ssize_t>(part.size() * sizeof(double));
+            if (::write(fds[1], part.data(), static_cast<size_t>(want)) != want) _exit(1);
             ::close(fds[1]);
             _exit(0);
         }

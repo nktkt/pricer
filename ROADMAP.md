@@ -94,7 +94,8 @@ Make it usable by others.
 - [x] Python bindings (pybind11/nanobind) + `pip install pricer`
 - [x] CLI and REST/gRPC service with a job API
       *(pricer_cli + a POSIX-socket REST service with an async job API; gRPC not done)*
-- [ ] Market-data adapters and result persistence
+- [x] Market-data adapters and result persistence
+      *(CSV quote/curve loaders + CSV result persistence; extensible to feeds/DBs)*
 - [x] Versioned releases (SemVer), docs site, examples gallery
       *(v0.1.0 release + CHANGELOG; Doxygen docs site live at nktkt.github.io/pricer; examples/ dir as the gallery)*
 - **Exit criteria:** a quant prices a book from Python without touching C++.  ✓

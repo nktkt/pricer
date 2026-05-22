@@ -38,6 +38,8 @@ include/pricer/   header-only core library
   adjoint.hpp            reverse-mode AD (AAD): all first-order Greeks in one sweep
   local_vol.hpp          Dupire local volatility from a call-price surface
   distributed.hpp        block-sharded MC with deterministic global aggregation
+  csv.hpp                minimal CSV read/write
+  market_data.hpp        CSV market-data adapters + result persistence
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
@@ -67,6 +69,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `aad_greeks` | Greeks by adjoint AD | All first-order Greeks from one reverse-mode backward sweep |
 | `local_vol_demo` | Dupire local vol | Local volatility recovered from a call-price surface |
 | `distributed_mc` | Distributed Monte Carlo | Sharded across worker processes; identical price for any worker count |
+| `market_data_demo` | Market data & persistence | Load quotes (CSV) → imply vol & Greeks → save results (CSV) |
 
 ## Requirements
 

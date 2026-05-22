@@ -1,32 +1,15 @@
-// pricer/payoff_jit.hpp — compile a payoff *formula* to native code with LLVM.
+// pricer/payoff_jit.hpp — JIT-compile a payoff formula to native code with LLVM.
 //
-// `PayoffJit::compile(formula, varNames)` parses a formula string, emits an LLVM
-// IR function `double payoff(const double* v)` that reads each named variable
-// from `v[index]`, JIT-compiles it, and returns a raw function pointer. The
-// caller fills `v` per Monte Carlo path, so the same engine prices any
-// instrument expressible in the grammar — including path-dependent ones, by
-// exposing path aggregates (terminal, average, max, min) as variables.
+// The formula is tokenized and parsed into a typed AST (pricer/payoff_ast.hpp);
+// this header then walks that AST to emit LLVM IR and JIT-compiles it. One
+// grammar, two backends: the AST interpreter (no LLVM) and this code generator.
 //
-// `compile_batch(formula, varNames, width)` emits a vectorized kernel
-// `void payoff_v(const double* v, double* out)` that processes `width` paths at
-// once using `<width x double>` IR. Variables are laid out structure-of-arrays:
-// v[i*width + lane] is variable i for lane `lane`; results land in out[0..width).
-//
-// Both entry points cache compiled kernels by (width, variables, formula), so
-// repeating a formula returns the existing function pointer without recompiling.
-//
-// Grammar (precedence low → high):
-//   expr   := cmp
-//   cmp    := add (('<'|'>'|'<='|'>='|'=='|'!=') add)?   // yields 1.0 / 0.0
-//   add    := mul (('+'|'-') mul)*
-//   mul    := factor (('*'|'/') factor)*
-//   factor := '-' factor | primary
-//   primary:= number | '(' expr ')' | ident | ident '(' args ')'
-// Functions: exp log sqrt abs (1 arg), max min pow (2 args), if(cond,a,b) (3 args).
-//
-// This header requires LLVM; only targets that link LLVM should include it.
+// `compile(formula, varNames)` yields `double payoff(const double* v)` reading
+// each named variable from v[index]. `compile_batch(formula, varNames, W)`
+// yields `void payoff_v(const double* v, double* out)` over `<W x double>` IR
+// (structure-of-arrays input). Compiled kernels are cached by (width, vars,
+// formula). Requires LLVM; only targets that link LLVM should include it.
 #pragma once
-#include <cctype>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -34,6 +17,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "pricer/payoff_ast.hpp"
 
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
@@ -52,152 +37,81 @@ namespace pricer {
 
 namespace detail {
 
-// Recursive-descent translator: formula text -> LLVM IR values. Works for both
-// scalar (`Width == 1`, value type `double`) and vector (`Width > 1`, value type
-// `<Width x double>`) code generation — the arithmetic IRBuilder calls are
-// type-polymorphic, so only the leaves (constants, variable loads) differ.
-class PayoffParser {
+// Walk a payoff AST and emit LLVM IR. Works for scalar (Width==1, ValTy=double)
+// and vector (ValTy = <Width x double>) codegen — the IRBuilder ops are type-
+// polymorphic, so only the leaves (constants, variable loads) differ.
+class Codegen {
 public:
-    PayoffParser(llvm::IRBuilder<>& b, llvm::LLVMContext& ctx, llvm::Value* args,
-                 const std::map<std::string, unsigned>& vars,
-                 llvm::Type* valTy, llvm::Type* eltTy, unsigned width)
-        : B(b), Ctx(ctx), Args(args), Vars(vars), ValTy(valTy), EltTy(eltTy), Width(width) {}
+    Codegen(llvm::IRBuilder<>& b, llvm::Value* args, const std::map<std::string, unsigned>& vars,
+            llvm::Type* valTy, llvm::Type* eltTy, unsigned width)
+        : B(b), Args(args), Vars(vars), ValTy(valTy), EltTy(eltTy), Width(width) {}
 
-    llvm::Value* run(const std::string& src) {
-        S = src;
-        pos = 0;
-        llvm::Value* v = parseExpr();
-        skipWs();
-        if (pos != S.size()) err("trailing characters: '" + S.substr(pos) + "'");
-        return v;
+    llvm::Value* gen(const ast::Node& n) {
+        switch (n.type) {
+            case ast::NodeType::Number: return llvm::ConstantFP::get(ValTy, n.number);  // splats if vector
+            case ast::NodeType::Var: return loadVar(n.name);
+            case ast::NodeType::Unary: return B.CreateFNeg(gen(*n.kids[0]));
+            case ast::NodeType::Binary: return genBinary(n);
+            case ast::NodeType::Call: return genCall(n);
+        }
+        err("bad AST node");
     }
 
 private:
-    llvm::IRBuilder<>& B;
-    llvm::LLVMContext& Ctx;
-    llvm::Value* Args;
-    const std::map<std::string, unsigned>& Vars;
-    llvm::Type* ValTy;   // double, or <Width x double>
-    llvm::Type* EltTy;   // always double (the storage element)
-    unsigned Width;
-    std::string S;
-    size_t pos = 0;
+    [[noreturn]] void err(const std::string& m) { throw std::runtime_error("payoff codegen: " + m); }
 
-    llvm::Type* dty() { return ValTy; }
-    llvm::Constant* dbl(double x) { return llvm::ConstantFP::get(ValTy, x); }  // splats if vector
-    [[noreturn]] void err(const std::string& m) { throw std::runtime_error("payoff formula: " + m); }
-
-    void skipWs() { while (pos < S.size() && std::isspace((unsigned char)S[pos])) pos++; }
-    char peek() { skipWs(); return pos < S.size() ? S[pos] : '\0'; }
-
-    llvm::Value* parseExpr() { return parseCmp(); }
-
-    llvm::Value* parseCmp() {
-        llvm::Value* lhs = parseAdd();
-        skipWs();
-        if (pos < S.size()) {
-            const char c = S[pos];
-            llvm::CmpInst::Predicate pred;
-            int len = 0;
-            const bool eq = (pos + 1 < S.size() && S[pos + 1] == '=');
-            if (c == '<') { pred = eq ? llvm::CmpInst::FCMP_OLE : llvm::CmpInst::FCMP_OLT; len = eq ? 2 : 1; }
-            else if (c == '>') { pred = eq ? llvm::CmpInst::FCMP_OGE : llvm::CmpInst::FCMP_OGT; len = eq ? 2 : 1; }
-            else if (c == '=' && eq) { pred = llvm::CmpInst::FCMP_OEQ; len = 2; }
-            else if (c == '!' && eq) { pred = llvm::CmpInst::FCMP_ONE; len = 2; }
-            if (len) {
-                pos += len;
-                llvm::Value* rhs = parseAdd();
-                // Map the boolean result to 1.0 / 0.0 so it composes arithmetically.
-                return B.CreateUIToFP(B.CreateFCmp(pred, lhs, rhs), ValTy);
-            }
-        }
-        return lhs;
-    }
-
-    llvm::Value* parseAdd() {
-        llvm::Value* lhs = parseMul();
-        while (true) {
-            const char c = peek();
-            if (c == '+') { pos++; lhs = B.CreateFAdd(lhs, parseMul()); }
-            else if (c == '-') { pos++; lhs = B.CreateFSub(lhs, parseMul()); }
-            else return lhs;
-        }
-    }
-
-    llvm::Value* parseMul() {
-        llvm::Value* lhs = parseFactor();
-        while (true) {
-            const char c = peek();
-            if (c == '*') { pos++; lhs = B.CreateFMul(lhs, parseFactor()); }
-            else if (c == '/') { pos++; lhs = B.CreateFDiv(lhs, parseFactor()); }
-            else return lhs;
-        }
-    }
-
-    llvm::Value* parseFactor() {
-        if (peek() == '-') { pos++; return B.CreateFNeg(parseFactor()); }
-        return parsePrimary();
-    }
-
-    llvm::Value* parsePrimary() {
-        const char c = peek();
-        if (c == '(') {
-            pos++;
-            llvm::Value* v = parseExpr();
-            if (peek() != ')') err("missing ')'");
-            pos++;
-            return v;
-        }
-        if (std::isdigit((unsigned char)c) || c == '.') return parseNumber();
-        if (std::isalpha((unsigned char)c) || c == '_') return parseIdent();
-        err(std::string("unexpected character '") + c + "'");
-    }
-
-    llvm::Value* parseNumber() {
-        skipWs();
-        const size_t start = pos;
-        while (pos < S.size() && (std::isdigit((unsigned char)S[pos]) || S[pos] == '.')) pos++;
-        return dbl(std::stod(S.substr(start, pos - start)));
-    }
-
-    llvm::Value* parseIdent() {
-        skipWs();
-        const size_t start = pos;
-        while (pos < S.size() && (std::isalnum((unsigned char)S[pos]) || S[pos] == '_')) pos++;
-        const std::string name = S.substr(start, pos - start);
-
-        if (peek() == '(') {  // function call
-            pos++;
-            std::vector<llvm::Value*> a;
-            if (peek() != ')') {
-                a.push_back(parseExpr());
-                while (peek() == ',') { pos++; a.push_back(parseExpr()); }
-            }
-            if (peek() != ')') err("missing ')' in call to " + name);
-            pos++;
-            return emitCall(name, a);
-        }
-
-        auto it = Vars.find(name);  // variable: load lane(s) from the SoA buffer
+    llvm::Value* loadVar(const std::string& name) {
+        auto it = Vars.find(name);
         if (it == Vars.end()) err("unknown variable: " + name);
         llvm::Value* ptr =
             B.CreateConstInBoundsGEP1_64(EltTy, Args, static_cast<uint64_t>(it->second) * Width);
         return B.CreateAlignedLoad(ValTy, ptr, llvm::Align(8));
     }
 
-    llvm::Value* emitCall(const std::string& name, const std::vector<llvm::Value*>& a) {
-        const size_t n = a.size();
-        if (name == "max" && n == 2) return B.CreateSelect(B.CreateFCmpOGT(a[0], a[1]), a[0], a[1]);
-        if (name == "min" && n == 2) return B.CreateSelect(B.CreateFCmpOLT(a[0], a[1]), a[0], a[1]);
-        if (name == "pow" && n == 2) return B.CreateBinaryIntrinsic(llvm::Intrinsic::pow, a[0], a[1]);
-        if (name == "exp" && n == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::exp, a[0]);
-        if (name == "log" && n == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::log, a[0]);
-        if (name == "sqrt" && n == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::sqrt, a[0]);
-        if (name == "abs" && n == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::fabs, a[0]);
-        if (name == "if" && n == 3)
-            return B.CreateSelect(B.CreateFCmpONE(a[0], dbl(0.0)), a[1], a[2]);
-        err("unknown function or wrong arity: " + name + "/" + std::to_string(n));
+    llvm::Value* genBinary(const ast::Node& n) {
+        llvm::Value* a = gen(*n.kids[0]);
+        llvm::Value* b = gen(*n.kids[1]);
+        const std::string& o = n.op;
+        if (o == "+") return B.CreateFAdd(a, b);
+        if (o == "-") return B.CreateFSub(a, b);
+        if (o == "*") return B.CreateFMul(a, b);
+        if (o == "/") return B.CreateFDiv(a, b);
+        llvm::CmpInst::Predicate p;
+        if (o == "<") p = llvm::CmpInst::FCMP_OLT;
+        else if (o == ">") p = llvm::CmpInst::FCMP_OGT;
+        else if (o == "<=") p = llvm::CmpInst::FCMP_OLE;
+        else if (o == ">=") p = llvm::CmpInst::FCMP_OGE;
+        else if (o == "==") p = llvm::CmpInst::FCMP_OEQ;
+        else if (o == "!=") p = llvm::CmpInst::FCMP_ONE;
+        else err("bad operator " + o);
+        // Map the boolean to 1.0 / 0.0 so it composes arithmetically.
+        return B.CreateUIToFP(B.CreateFCmp(p, a, b), ValTy);
     }
+
+    llvm::Value* genCall(const ast::Node& n) {
+        std::vector<llvm::Value*> a;
+        a.reserve(n.kids.size());
+        for (const auto& k : n.kids) a.push_back(gen(*k));
+        const std::string& f = n.name;
+        const size_t k = a.size();
+        if (f == "max" && k == 2) return B.CreateSelect(B.CreateFCmpOGT(a[0], a[1]), a[0], a[1]);
+        if (f == "min" && k == 2) return B.CreateSelect(B.CreateFCmpOLT(a[0], a[1]), a[0], a[1]);
+        if (f == "pow" && k == 2) return B.CreateBinaryIntrinsic(llvm::Intrinsic::pow, a[0], a[1]);
+        if (f == "exp" && k == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::exp, a[0]);
+        if (f == "log" && k == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::log, a[0]);
+        if (f == "sqrt" && k == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::sqrt, a[0]);
+        if (f == "abs" && k == 1) return B.CreateUnaryIntrinsic(llvm::Intrinsic::fabs, a[0]);
+        if (f == "if" && k == 3)
+            return B.CreateSelect(B.CreateFCmpONE(a[0], llvm::ConstantFP::get(ValTy, 0.0)), a[1], a[2]);
+        err("unknown function or wrong arity: " + f + "/" + std::to_string(k));
+    }
+
+    llvm::IRBuilder<>& B;
+    llvm::Value* Args;
+    const std::map<std::string, unsigned>& Vars;
+    llvm::Type* ValTy;   // double, or <Width x double>
+    llvm::Type* EltTy;   // always double (the storage element)
+    unsigned Width;
 };
 
 }  // namespace detail
@@ -230,7 +144,7 @@ public:
     }
 
     const std::string& last_ir() const { return last_ir_; }  // IR of the most recent build()
-    unsigned compiles() const { return compiles_; }          // number of actual JIT compiles (cache misses)
+    unsigned compiles() const { return compiles_; }          // actual JIT compiles (cache misses)
 
 private:
     // Build (or fetch from cache) a kernel; returns its native address.
@@ -240,6 +154,8 @@ private:
         for (const auto& v : varNames) key += "|" + v;
         key += "#" + formula;
         if (auto it = cache_.find(key); it != cache_.end()) return it->second;
+
+        const ast::NodePtr root = ast::parse(formula);  // tokenize + parse -> typed AST
 
         auto ctx = std::make_unique<llvm::LLVMContext>();
         auto mod = std::make_unique<llvm::Module>("payoff_module", *ctx);
@@ -264,8 +180,8 @@ private:
         std::map<std::string, unsigned> vars;
         for (unsigned i = 0; i < varNames.size(); ++i) vars[varNames[i]] = i;
 
-        detail::PayoffParser parser(builder, *ctx, fn->getArg(0), vars, valTy, eltTy, width);
-        llvm::Value* result = parser.run(formula);
+        detail::Codegen cg(builder, fn->getArg(0), vars, valTy, eltTy, width);
+        llvm::Value* result = cg.gen(*root);
         if (scalar) {
             builder.CreateRet(result);
         } else {

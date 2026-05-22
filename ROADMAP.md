@@ -61,7 +61,8 @@ Turn scripts into a reusable library.
 
 ### Phase 2 — Payoff DSL & JIT engine (3–6 months)
 Make the JIT compiler the real core.
-- [ ] Formal grammar + tokenizer/parser → typed AST
+- [x] Formal grammar + tokenizer/parser → typed AST
+      *(payoff_ast.hpp: tokenizer + parser + typed AST + tree-walking interpreter; JIT now walks the AST)*
 - [x] Functions: `exp log sqrt pow abs`, comparisons, `if/else`
 - [x] Path-aware payoffs (time-indexed `S[t]`, multi-asset `S1, S2, …`)
 - [x] Vectorized codegen (LLVM vector types → SIMD kernels)

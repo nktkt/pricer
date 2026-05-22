@@ -41,7 +41,8 @@ include/pricer/   header-only core library
   distributed.hpp        block-sharded MC with deterministic global aggregation
   csv.hpp                minimal CSV read/write
   market_data.hpp        CSV market-data adapters + result persistence
-  payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
+  payoff_ast.hpp         payoff DSL: tokenizer, parser, typed AST + interpreter (no LLVM)
+  payoff_jit.hpp         walks the AST to emit LLVM IR and JIT-compile (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
 python/           Python bindings (pybind11): `pip install .`
@@ -56,6 +57,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `benchmark` | MC throughput harness | ~275 Mpaths/s; baseline for tracking optimizations |
 | `greeks` | Risk sensitivities (Greeks) | Closed-form vs. finite-difference cross-check |
 | `barrier_option` | Path-dependent product | Up-and-out barrier call via stepped MC |
+| `payoff_interpret` | Payoff DSL without LLVM | Parse a formula → typed AST → tree-walking interpreter |
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
 | `path_dependent` | Exotics from formulas | Asian / barrier / lookback / digital, each a one-line formula |
 | `simd_payoff` | Vectorized codegen | Same formula compiled to `<W x double>` SIMD IR; scalar vs. batch |

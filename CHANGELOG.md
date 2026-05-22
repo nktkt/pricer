@@ -6,16 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Added
-- **Python bindings** (`pip install .`) via pybind11 + scikit-build-core:
-  Black–Scholes pricing & Greeks, implied volatility, Monte Carlo (serial,
-  deterministic parallel, quasi-MC), and VaR/ES — usable from Python with no C++.
-- Python smoke tests (`python/tests/test_pricer.py`) and a book-pricing example
-  (`python/example_book.py`); a `python` CI job builds and tests on Linux/macOS.
-
 ## [0.1.0] — 2026-05-21
 
-Initial public foundation, built up in phases.
+Initial public release, built up in phases.
 
 ### Added
 - **Core library** (`include/pricer/`, header-only): standard-normal helpers,
@@ -30,7 +23,13 @@ Initial public foundation, built up in phases.
 - **Risk & calibration**: implied-volatility solver (`implied_vol.hpp`), Monte
   Carlo Greeks (`greeks_mc.hpp`: bump+CRN and pathwise), and Value-at-Risk /
   Expected Shortfall (`risk.hpp`).
-- Examples for every topic, a CTest suite, a CMake build, and CI on Linux/macOS.
+- **Python bindings** (`pip install .`) via pybind11 + scikit-build-core:
+  pricing, Greeks, implied volatility, Monte Carlo (serial/parallel/quasi-MC)
+  and VaR/ES — usable from Python with no C++.
+- **Command-line tool** `pricer_cli`: `price` (price + Greeks), `iv` (implied
+  vol), and `mc` (parallel Monte Carlo) sub-commands.
+- Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
+  Python) on Linux and macOS.
 
 [Unreleased]: https://github.com/nktkt/pricer/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/nktkt/pricer/releases/tag/v0.1.0

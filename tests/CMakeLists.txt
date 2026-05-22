@@ -8,6 +8,13 @@ foreach(t test_black_scholes test_greeks test_monte_carlo test_parallel test_var
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
 
+# Smoke-test the CLI tool (only when the examples, hence the CLI, were built).
+if(TARGET pricer_cli)
+  add_test(NAME cli_price
+           COMMAND pricer_cli price --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1)
+  set_tests_properties(cli_price PROPERTIES PASS_REGULAR_EXPRESSION "price: 10\\.45")
+endif()
+
 # DSL/JIT test runs only when JIT is enabled and LLVM is found.
 if(PRICER_ENABLE_JIT)
   find_package(LLVM CONFIG QUIET)

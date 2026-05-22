@@ -44,6 +44,7 @@ python/           Python bindings (pybind11): `pip install .`
 | `variance_reduction` | Fewer paths, same accuracy | Antithetic / control-variate / QMC error vs. plain MC |
 | `mc_greeks` | Monte Carlo Greeks | Bump+CRN and pathwise delta/vega vs. closed form |
 | `risk_demo` | Portfolio risk | 1-day VaR / ES of an option book by scenario simulation |
+| `pricer_cli` | Command-line tool | `price` / `iv` / `mc` sub-commands |
 
 ## Requirements
 
@@ -134,6 +135,17 @@ fewer paths:
 
 GPU offload (NVPTX/SPIR-V) is on the roadmap but needs appropriate hardware/CI,
 so it is not built here yet.
+
+## Command line
+
+`pricer_cli` prices from the shell:
+
+```sh
+./build/examples/pricer_cli price --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1
+# price: 10.450584  (+ delta/gamma/vega/theta/rho)
+./build/examples/pricer_cli iv --type call --price 10.4506 --S 100 --K 100 --r 0.05 --T 1
+./build/examples/pricer_cli mc --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1 --paths 5000000
+```
 
 ## Python
 

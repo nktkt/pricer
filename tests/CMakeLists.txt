@@ -8,9 +8,11 @@ foreach(t test_black_scholes test_greeks test_monte_carlo test_parallel test_var
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
 
-# DSL/JIT test runs only when LLVM is available.
-find_package(LLVM CONFIG QUIET)
-if(LLVM_FOUND)
+# DSL/JIT test runs only when JIT is enabled and LLVM is found.
+if(PRICER_ENABLE_JIT)
+  find_package(LLVM CONFIG QUIET)
+endif()
+if(PRICER_ENABLE_JIT AND LLVM_FOUND)
   llvm_map_components_to_libnames(LLVM_LIBS core orcjit native)
   add_executable(test_payoff_dsl test_payoff_dsl.cpp)
   target_include_directories(test_payoff_dsl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS})

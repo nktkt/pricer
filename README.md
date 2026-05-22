@@ -59,9 +59,11 @@ ctest --test-dir build --output-on-failure   # run the test suite
 ./build/examples/black_scholes_demo          # run a demo
 ```
 
-The JIT examples are built automatically when CMake finds LLVM (point it there
-with `-DLLVM_DIR=$(llvm-config --cmakedir)` if needed); otherwise they are
-skipped and the rest still builds. CI builds and tests on Linux and macOS.
+The JIT examples are built when `PRICER_ENABLE_JIT` is on (default) **and** CMake
+finds LLVM (point it there with `-DLLVM_DIR=$(llvm-config --cmakedir)` if needed);
+otherwise they are skipped and the rest still builds. CI builds and tests on Linux
+and macOS with `-DPRICER_ENABLE_JIT=OFF` (the hosted runners expose an LLVM whose
+JIT cannot initialize there), so the JIT path is exercised locally instead.
 
 ## The LLVM JIT highlight
 

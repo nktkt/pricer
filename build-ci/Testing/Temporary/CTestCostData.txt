@@ -1,0 +1,9 @@
+test_black_scholes 1 0.325361
+test_greeks 1 0.311756
+test_monte_carlo 1 0.472841
+test_parallel 1 0.85534
+test_variance_reduction 1 0.596868
+test_implied_vol 1 2.40689
+test_greeks_mc 1 1.39825
+test_risk 1 0.227505
+---

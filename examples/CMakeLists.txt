@@ -7,9 +7,11 @@ foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benc
   target_link_libraries(${ex} PRIVATE pricer Threads::Threads)
 endforeach()
 
-# The LLVM JIT examples are optional: built only when LLVM is available.
-find_package(LLVM CONFIG QUIET)
-if(LLVM_FOUND)
+# The LLVM JIT examples are optional: built only when JIT is enabled AND LLVM is found.
+if(PRICER_ENABLE_JIT)
+  find_package(LLVM CONFIG QUIET)
+endif()
+if(PRICER_ENABLE_JIT AND LLVM_FOUND)
   message(STATUS "LLVM ${LLVM_PACKAGE_VERSION} found — building JIT examples")
   llvm_map_components_to_libnames(LLVM_LIBS core orcjit native)
   foreach(ex jit_payoff path_dependent simd_payoff)
@@ -20,6 +22,8 @@ if(LLVM_FOUND)
     # The DSL parser uses exceptions; LLVM may ship built with -fno-exceptions.
     target_compile_options(${ex} PRIVATE -fexceptions)
   endforeach()
+elseif(NOT PRICER_ENABLE_JIT)
+  message(STATUS "PRICER_ENABLE_JIT=OFF — skipping JIT examples")
 else()
   message(STATUS "LLVM not found — skipping JIT examples")
 endif()

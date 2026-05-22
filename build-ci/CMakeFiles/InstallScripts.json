@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/naoki/dev/lab/pro1/i-2/build-ci/cmake_install.cmake",
+		"/Users/naoki/dev/lab/pro1/i-2/build-ci/examples/cmake_install.cmake",
+		"/Users/naoki/dev/lab/pro1/i-2/build-ci/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

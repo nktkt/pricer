@@ -14,6 +14,14 @@ target_include_directories(pricer INTERFACE
   $<INSTALL_INTERFACE:include>)
 target_compile_features(pricer INTERFACE cxx_std_17)
 
+# Strict warnings, treated as errors, for first-party targets. Linked into our
+# own examples/tests/server (not the LLVM- or pybind-heavy targets, whose
+# third-party headers we do not control).
+add_library(pricer_warnings INTERFACE)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(pricer_warnings INTERFACE -Wall -Wextra -Werror)
+endif()
+
 option(PRICER_BUILD_EXAMPLES "Build example programs" ON)
 option(PRICER_BUILD_TESTS "Build tests" ON)
 # LLVM JIT components (payoff DSL). ON by default, but only built when LLVM is

@@ -6,7 +6,7 @@ foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benc
           heston_calibration ad_greeks distributed_mc aad_greeks local_vol_demo
           market_data_demo simd_paths payoff_interpret)
   add_executable(${ex} ${ex}.cpp)
-  target_link_libraries(${ex} PRIVATE pricer Threads::Threads)
+  target_link_libraries(${ex} PRIVATE pricer Threads::Threads pricer_warnings)
 endforeach()
 
 # The LLVM JIT examples are optional: built only when JIT is enabled AND LLVM is found.

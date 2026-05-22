@@ -7,6 +7,22 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Payoff DSL typed AST** (`payoff_ast.hpp`): tokenizer + parser + AST +
+  tree-walking interpreter (no LLVM); the JIT now walks this shared AST.
+- **Counter-based RNG** (`rng.hpp`) for reproducible, parallel/SIMD-friendly path
+  generation (~1.9× faster than `std::mt19937_64`).
+- **Distributed Monte Carlo** (`distributed.hpp`) with bit-identical results
+  regardless of how blocks are sharded, plus a multi-process driver.
+- **Reverse-mode AAD** (`adjoint.hpp`) and forward-mode AD (`dual.hpp`) for exact
+  Greeks; **Dupire local volatility** (`local_vol.hpp`).
+- **Calibration**: Levenberg–Marquardt solver, SVI and Heston models, plus a
+  yield curve, implied-vol surface, and quadratic smile fit.
+- **CSV market-data adapters and result persistence** (`market_data.hpp`).
+
+### Changed
+- First-party targets now build with `-Wall -Wextra -Werror`; added boundary /
+  error-handling tests.
+
 - **REST pricing service** (`server/`, opt-in `-DPRICER_BUILD_SERVER=ON`): a
   dependency-free HTTP server (POSIX sockets) with `/price`, `/impliedvol`,
   `/mc`, and an async Monte Carlo job API (`/submit`, `/job`); a `server` CI job

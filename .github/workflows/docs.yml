@@ -32,10 +32,8 @@ jobs:
           mkdir -p build/docs
           doxygen Doxyfile
 
-      - name: Configure Pages (enables it on first run)
+      - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3

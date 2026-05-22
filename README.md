@@ -21,6 +21,9 @@ include/pricer/   header-only core library
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)
   variance_reduction.hpp antithetic & control-variate estimators
   qmc.hpp                quasi-Monte Carlo (low-discrepancy) + inverse-normal CDF
+  implied_vol.hpp        implied-volatility solver (safeguarded Newton)
+  greeks_mc.hpp          Monte Carlo Greeks (bump+CRN and pathwise)
+  risk.hpp               Value-at-Risk / Expected Shortfall from a P&L sample
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
@@ -38,6 +41,8 @@ tests/            CTest suite (dependency-free; DSL test needs LLVM)
 | `path_dependent` | Exotics from formulas | Asian / barrier / lookback / digital, each a one-line formula |
 | `simd_payoff` | Vectorized codegen | Same formula compiled to `<W x double>` SIMD IR; scalar vs. batch |
 | `variance_reduction` | Fewer paths, same accuracy | Antithetic / control-variate / QMC error vs. plain MC |
+| `mc_greeks` | Monte Carlo Greeks | Bump+CRN and pathwise delta/vega vs. closed form |
+| `risk_demo` | Portfolio risk | 1-day VaR / ES of an option book by scenario simulation |
 
 ## Requirements
 

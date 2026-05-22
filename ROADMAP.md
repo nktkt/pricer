@@ -81,9 +81,11 @@ Single-node speed.
 ### Phase 4 — Risk & calibration (9–12 months)
 From price to risk.
 - [ ] Greeks via adjoint algorithmic differentiation (AAD)
+      *(MC Greeks landed: bump+CRN and pathwise; full AAD tape still to do)*
 - [ ] Yield-curve and volatility-surface construction
+      *(implied-vol solver landed as the building block)*
 - [ ] Model calibration (Heston, local vol) with least-squares solvers
-- [ ] Portfolio risk: VaR/ES, scenario engine, basic xVA
+- [x] Portfolio risk: VaR/ES, scenario engine *(xVA still to do)*
 - **Exit criteria:** full Greeks for a multi-asset book in one pass; calibration
   reproduces market quotes within tolerance.
 

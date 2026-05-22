@@ -33,6 +33,8 @@ include/pricer/   header-only core library
   heston.hpp             Heston stochastic-vol pricing (char. function) + calibration
   dual.hpp               forward-mode automatic differentiation (dual numbers)
   greeks_ad.hpp          exact Black–Scholes Greeks via AD (matches closed form)
+  adjoint.hpp            reverse-mode AD (AAD): all first-order Greeks in one sweep
+  local_vol.hpp          Dupire local volatility from a call-price surface
   distributed.hpp        block-sharded MC with deterministic global aggregation
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
@@ -60,6 +62,8 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `svi_calibration` | SVI model calibration | Fit an SVI smile to market quotes via Levenberg–Marquardt |
 | `heston_calibration` | Heston model calibration | Fit Heston to an option grid by least squares |
 | `ad_greeks` | Greeks by auto-diff | Forward-mode AD Greeks vs. closed form (machine precision) |
+| `aad_greeks` | Greeks by adjoint AD | All first-order Greeks from one reverse-mode backward sweep |
+| `local_vol_demo` | Dupire local vol | Local volatility recovered from a call-price surface |
 | `distributed_mc` | Distributed Monte Carlo | Sharded across worker processes; identical price for any worker count |
 
 ## Requirements

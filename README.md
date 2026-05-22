@@ -1,11 +1,15 @@
-# cpp-llvm-option-pricing
+# pricer
 
-Option pricing experiments in modern C++ — from the Black–Scholes formula and
-Monte Carlo simulation to a **runtime payoff compiler built on LLVM JIT**.
+Option pricing in modern C++ — from the Black–Scholes formula and Monte Carlo
+simulation to a **runtime payoff compiler built on LLVM JIT**.
 
 Each program is small, self-contained, and heavily commented. Together they walk
 from the basics of pricing to the kind of just-in-time numerical engines used in
 quantitative finance.
+
+This is the seed of a larger goal: a **scalable pricing & risk engine** where you
+describe an instrument as a formula and get fast, correct results — on a laptop
+or across a cluster. See [`ROADMAP.md`](ROADMAP.md) for the long-range plan.
 
 ## What's inside
 

@@ -1,0 +1,26 @@
+# Doxygen configuration for the pricer API reference.
+# Only non-default options are set; everything else uses Doxygen defaults.
+PROJECT_NAME           = "pricer"
+PROJECT_NUMBER         = 0.1.0
+PROJECT_BRIEF          = "Option pricing & risk engine (C++/LLVM)"
+OUTPUT_DIRECTORY       = build/docs
+
+# Sources: the public headers, plus README.md as the landing page.
+INPUT                  = include README.md
+FILE_PATTERNS          = *.hpp
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = README.md
+
+# Document every public entity, even those without /// doc-comments.
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+JAVADOC_AUTOBRIEF      = YES
+WARN_IF_UNDOCUMENTED   = NO
+QUIET                  = YES
+
+# HTML only; graphs via Graphviz (installed in CI).
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HAVE_DOT               = YES
+DOT_IMAGE_FORMAT       = svg
+SOURCE_BROWSER         = YES

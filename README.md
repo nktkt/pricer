@@ -27,6 +27,8 @@ include/pricer/   header-only core library
   curve.hpp              discount (yield) curve: zero rate / df / forward
   vol_surface.hpp        implied-vol surface from a market price grid (bilinear)
   smile.hpp              least-squares quadratic volatility-smile calibration
+  optimize.hpp           Levenberg–Marquardt least-squares solver (numerical Jacobian)
+  svi.hpp                SVI smile model + least-squares calibration (uses optimize.hpp)
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
@@ -49,6 +51,7 @@ python/           Python bindings (pybind11): `pip install .`
 | `risk_demo` | Portfolio risk | 1-day VaR / ES of an option book by scenario simulation |
 | `pricer_cli` | Command-line tool | `price` / `iv` / `mc` sub-commands |
 | `vol_surface_demo` | Curve & vol surface | Discount curve, implied-vol surface, smile calibration |
+| `svi_calibration` | SVI model calibration | Fit an SVI smile to market quotes via Levenberg–Marquardt |
 
 ## Requirements
 

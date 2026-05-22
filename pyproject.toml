@@ -1,0 +1,26 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.12"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pricer"
+version = "0.1.0"
+description = "Option pricing & risk engine with a C++/LLVM core"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "naoki-takata" }]
+keywords = ["quantitative-finance", "option-pricing", "monte-carlo", "cpp", "llvm"]
+
+[project.urls]
+Homepage = "https://github.com/nktkt/pricer"
+
+[tool.scikit-build]
+# Build only the Python extension (skip examples/tests/JIT) into the `pricer` package.
+cmake.args = [
+  "-DPRICER_BUILD_PYTHON=ON",
+  "-DPRICER_BUILD_EXAMPLES=OFF",
+  "-DPRICER_BUILD_TESTS=OFF",
+  "-DPRICER_ENABLE_JIT=OFF",
+]
+wheel.packages = ["python/pricer"]

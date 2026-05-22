@@ -27,6 +27,7 @@ include/pricer/   header-only core library
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
+python/           Python bindings (pybind11): `pip install .`
 ```
 
 | Example | Topic | Highlight |
@@ -133,6 +134,26 @@ fewer paths:
 
 GPU offload (NVPTX/SPIR-V) is on the roadmap but needs appropriate hardware/CI,
 so it is not built here yet.
+
+## Python
+
+The core is exposed to Python via pybind11 — price a book without touching C++:
+
+```sh
+pip install .          # builds the C++ extension (scikit-build-core + pybind11)
+python python/example_book.py
+```
+
+```python
+import pricer
+from pricer import OptionType
+
+c  = pricer.black_scholes_call(100, 100, 0.05, 0.20, 1.0)        # 10.4506
+g  = pricer.black_scholes_greeks(OptionType.Call, 100, 100, 0.05, 0.20, 1.0)
+iv = pricer.implied_vol(OptionType.Call, c, 100, 100, 0.05, 1.0) # ~0.20
+mc = pricer.mc_price_parallel(OptionType.Call, 100, 100, 0.05, 0.20, 1.0, n_paths=10_000_000)
+rm = pricer.var_es(pnl_list, 0.99)                               # rm.var, rm.es
+```
 
 ## Disclaimer
 

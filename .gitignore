@@ -1,5 +1,6 @@
 # CMake build directory
 build/
+build-*/
 cmake-build-*/
 
 # Compiler / OS artifacts
@@ -7,3 +8,11 @@ cmake-build-*/
 *.dSYM/
 .DS_Store
 compile_commands.json
+
+# Python
+.venv/
+__pycache__/
+*.so
+*.egg-info/
+dist/
+wheelhouse/

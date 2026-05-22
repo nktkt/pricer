@@ -102,7 +102,9 @@ Make it usable by others.
 ### Phase 6 — Distributed scale-out (18–24+ months)
 Beyond one machine.
 - [ ] Distributed MC (MPI / Ray / Kubernetes) with sharded path generation
+      *(block-sharded MC + a multi-process driver landed; cross-node MPI/Ray/k8s transport pending)*
 - [ ] Work scheduling, fault tolerance, deterministic global aggregation
+      *(deterministic global aggregation done — bit-identical for any worker count; scheduling/fault-tolerance pending)*
 - [ ] Observability: metrics, tracing, cost/perf dashboards
 - [ ] Cloud-native deployment (containers, autoscaling)
 - **Exit criteria:** linear scaling of a large MC job across N nodes with

@@ -1,12 +1,9 @@
-# Compiled binaries (these have no file extension)
-option_pricing
-convergence
-parallel_mc
-greeks
-barrier_option
-jit_payoff
+# CMake build directory
+build/
+cmake-build-*/
 
-# Build / OS artifacts
+# Compiler / OS artifacts
 *.o
 *.dSYM/
 .DS_Store
+compile_commands.json

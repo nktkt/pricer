@@ -11,39 +11,43 @@ This is the seed of a larger goal: a **scalable pricing & risk engine** where yo
 describe an instrument as a formula and get fast, correct results — on a laptop
 or across a cluster. See [`ROADMAP.md`](ROADMAP.md) for the long-range plan.
 
-## What's inside
+## Project layout
 
-| File | Topic | Highlight |
-|------|-------|-----------|
-| `option_pricing.cpp` | Black–Scholes vs. Monte Carlo | Two independent methods agree to ~0.05% |
-| `convergence.cpp` | Accuracy vs. speed | Error shrinks like `1/sqrt(N)` (×100 paths → ~1/10 error) |
-| `parallel_mc.cpp` | Multithreaded Monte Carlo | ~8× faster across 10 logical cores |
-| `greeks.cpp` | Risk sensitivities (Greeks) | Closed-form vs. finite-difference cross-check |
-| `barrier_option.cpp` | Path-dependent product | Up-and-out barrier call via stepped MC |
-| `jit_payoff.cpp` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
-| `bs_common.hpp` | Shared helpers | `norm_cdf`, `norm_pdf`, `black_scholes_call` |
+```
+include/pricer/   header-only core library
+  normal.hpp        standard-normal pdf / cdf
+  black_scholes.hpp closed-form pricing + Greeks
+  monte_carlo.hpp   generic terminal-value MC engine
+examples/         runnable demos built on the library
+tests/            CTest suite (dependency-free)
+```
+
+| Example | Topic | Highlight |
+|---------|-------|-----------|
+| `black_scholes_demo` | Black–Scholes vs. Monte Carlo | Two independent methods agree to ~0.05% |
+| `convergence` | Accuracy vs. speed | Error shrinks like `1/sqrt(N)` (×100 paths → ~1/10 error) |
+| `parallel_mc` | Multithreaded Monte Carlo | ~8× faster across 10 logical cores |
+| `greeks` | Risk sensitivities (Greeks) | Closed-form vs. finite-difference cross-check |
+| `barrier_option` | Path-dependent product | Up-and-out barrier call via stepped MC |
+| `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
 
 ## Requirements
 
-- A C++17 compiler (`clang++` or `g++`)
-- **LLVM 18+** (only for `jit_payoff`). On macOS: `brew install llvm`
+- CMake 3.16+ and a C++17 compiler (`clang++` or `g++`)
+- **LLVM** (optional, only for the `jit_payoff` example). On macOS: `brew install llvm`
 
-The `Makefile` assumes Homebrew LLVM at `/opt/homebrew/opt/llvm`. Adjust the
-`LLVM` variable if yours lives elsewhere.
-
-## Build & run
+## Build, test & run
 
 ```sh
-make            # build everything
-make run        # build, then run every sample in order
-make clean      # remove binaries
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure   # run the test suite
+./build/examples/black_scholes_demo          # run a demo
 ```
 
-Or build a single sample:
-
-```sh
-clang++ -std=c++17 -O2 -pthread convergence.cpp -o convergence && ./convergence
-```
+The `jit_payoff` example is built automatically when CMake finds LLVM (point it
+there with `-DLLVM_DIR=$(llvm-config --cmakedir)` if needed); otherwise it is
+skipped and the rest still builds. CI builds and tests on Linux and macOS.
 
 ## The LLVM JIT highlight
 
@@ -52,9 +56,9 @@ JIT-compiles it to native code at runtime, and calls it from a Monte Carlo loop.
 Change the formula and you price a different instrument — without recompiling C++.
 
 ```sh
-./jit_payoff                              # call:     max(ST - K, 0)   (matches Black–Scholes)
-./jit_payoff "max(K - ST, 0)"            # put
-./jit_payoff "max(ST-K,0)+max(K-ST,0)"   # straddle
+./build/examples/jit_payoff                            # call:  max(ST - K, 0)  (matches Black–Scholes)
+./build/examples/jit_payoff "max(K - ST, 0)"          # put
+./build/examples/jit_payoff "max(ST-K,0)+max(K-ST,0)" # straddle
 ```
 
 For `max(ST - K, 0)` it generates and compiles:
@@ -72,8 +76,8 @@ entry:
 Supported grammar: numbers, variables `ST` / `K`, operators `+ - * /`, unary
 minus, parentheses, and `max(a, b)` / `min(a, b)`.
 
-> Note: `llvm-config --cxxflags` emits `-fno-exceptions`; the build appends
-> `-fexceptions` afterwards so the parser can throw on malformed input.
+> Note: the DSL parser uses exceptions for error reporting, so the `jit_payoff`
+> target is compiled with `-fexceptions` (LLVM itself often ships built without).
 
 ## Disclaimer
 

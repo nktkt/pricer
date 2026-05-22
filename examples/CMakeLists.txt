@@ -3,7 +3,7 @@ find_package(Threads REQUIRED)
 # Examples that only need the header-only core.
 foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benchmark
           variance_reduction mc_greeks risk_demo pricer_cli vol_surface_demo svi_calibration
-          heston_calibration)
+          heston_calibration ad_greeks)
   add_executable(${ex} ${ex}.cpp)
   target_link_libraries(${ex} PRIVATE pricer Threads::Threads)
 endforeach()

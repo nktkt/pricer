@@ -31,6 +31,8 @@ include/pricer/   header-only core library
   svi.hpp                SVI smile model + least-squares calibration (uses optimize.hpp)
   quadrature.hpp         Gauss–Legendre numerical integration
   heston.hpp             Heston stochastic-vol pricing (char. function) + calibration
+  dual.hpp               forward-mode automatic differentiation (dual numbers)
+  greeks_ad.hpp          exact Black–Scholes Greeks via AD (matches closed form)
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
@@ -55,6 +57,7 @@ python/           Python bindings (pybind11): `pip install .`
 | `vol_surface_demo` | Curve & vol surface | Discount curve, implied-vol surface, smile calibration |
 | `svi_calibration` | SVI model calibration | Fit an SVI smile to market quotes via Levenberg–Marquardt |
 | `heston_calibration` | Heston model calibration | Fit Heston to an option grid by least squares |
+| `ad_greeks` | Greeks by auto-diff | Forward-mode AD Greeks vs. closed form (machine precision) |
 
 ## Requirements
 

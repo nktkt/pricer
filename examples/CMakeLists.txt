@@ -1,7 +1,7 @@
 find_package(Threads REQUIRED)
 
 # Examples that only need the header-only core.
-foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benchmark)
+foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benchmark variance_reduction)
   add_executable(${ex} ${ex}.cpp)
   target_link_libraries(${ex} PRIVATE pricer Threads::Threads)
 endforeach()

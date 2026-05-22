@@ -15,10 +15,13 @@ or across a cluster. See [`ROADMAP.md`](ROADMAP.md) for the long-range plan.
 
 ```
 include/pricer/   header-only core library
-  normal.hpp        standard-normal pdf / cdf
-  black_scholes.hpp closed-form pricing + Greeks
-  monte_carlo.hpp   generic terminal-value MC engine
-  payoff_jit.hpp    payoff-formula → LLVM IR → native-code compiler (needs LLVM)
+  normal.hpp             standard-normal pdf / cdf
+  black_scholes.hpp      closed-form pricing + Greeks
+  monte_carlo.hpp        generic terminal-value MC engine
+  parallel.hpp           deterministic multithreaded MC (result independent of thread count)
+  variance_reduction.hpp antithetic & control-variate estimators
+  qmc.hpp                quasi-Monte Carlo (low-discrepancy) + inverse-normal CDF
+  payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
 ```
@@ -34,6 +37,7 @@ tests/            CTest suite (dependency-free; DSL test needs LLVM)
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
 | `path_dependent` | Exotics from formulas | Asian / barrier / lookback / digital, each a one-line formula |
 | `simd_payoff` | Vectorized codegen | Same formula compiled to `<W x double>` SIMD IR; scalar vs. batch |
+| `variance_reduction` | Fewer paths, same accuracy | Antithetic / control-variate / QMC error vs. plain MC |
 
 ## Requirements
 
@@ -104,6 +108,24 @@ parentheses, and functions `exp log sqrt abs` (1 arg), `max min pow` (2 args),
 
 > Note: the DSL parser uses exceptions for error reporting, so the `jit_payoff`
 > target is compiled with `-fexceptions` (LLVM itself often ships built without).
+
+## Performance & scale
+
+Two ways to reach a target accuracy faster — by going wider, and by needing
+fewer paths:
+
+- **Deterministic parallel MC** (`pricer/parallel.hpp`) splits work into a fixed
+  set of blocks with per-block seeds, so the result is bit-for-bit identical no
+  matter how many threads run it. Throughput scales with cores (~7× on 10 cores).
+- **Variance reduction** (`pricer/variance_reduction.hpp`, `pricer/qmc.hpp`):
+  antithetic and control-variate estimators, plus quasi-Monte Carlo whose error
+  decays roughly like `1/N` instead of `1/sqrt(N)`. For a vanilla call these reach
+  the analytic price with 1–3 orders of magnitude less error than plain MC at the
+  same path count (run `variance_reduction`). Combined with parallelism, that is a
+  large effective speedup over the single-threaded scalar baseline.
+
+GPU offload (NVPTX/SPIR-V) is on the roadmap but needs appropriate hardware/CI,
+so it is not built here yet.
 
 ## Disclaimer
 

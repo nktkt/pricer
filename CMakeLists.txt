@@ -21,6 +21,7 @@ option(PRICER_BUILD_TESTS "Build tests" ON)
 # (e.g. some CI runners) so the rest of the project still builds and tests.
 option(PRICER_ENABLE_JIT "Build LLVM JIT components (needs a working LLVM)" ON)
 option(PRICER_BUILD_PYTHON "Build the Python bindings (needs pybind11)" OFF)
+option(PRICER_BUILD_SERVER "Build the REST pricing service (POSIX sockets; Linux/macOS)" OFF)
 
 if(PRICER_BUILD_EXAMPLES)
   add_subdirectory(examples)
@@ -33,4 +34,8 @@ endif()
 
 if(PRICER_BUILD_PYTHON)
   add_subdirectory(python)
+endif()
+
+if(PRICER_BUILD_SERVER)
+  add_subdirectory(server)
 endif()

@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **REST pricing service** (`server/`, opt-in `-DPRICER_BUILD_SERVER=ON`): a
+  dependency-free HTTP server (POSIX sockets) with `/price`, `/impliedvol`,
+  `/mc`, and an async Monte Carlo job API (`/submit`, `/job`); a `server` CI job
+  builds it and smoke-tests the endpoints on Linux/macOS.
+- Vol-surface/curve/calibration stack: discount curve, implied-vol surface,
+  quadratic & SVI smile calibration, Heston pricing + calibration (Levenberg–
+  Marquardt), and exact Greeks by forward-mode automatic differentiation.
+
 ## [0.1.0] — 2026-05-21
 
 Initial public release, built up in phases.

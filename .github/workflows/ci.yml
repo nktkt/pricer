@@ -48,3 +48,23 @@ jobs:
         # Run from a neutral directory so the installed package is imported,
         # not the source tree.
         run: cd "${{ runner.temp }}" && python "${{ github.workspace }}/python/tests/test_pricer.py"
+
+  server:
+    name: server (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the REST server
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPRICER_BUILD_SERVER=ON \
+            -DPRICER_BUILD_EXAMPLES=OFF -DPRICER_BUILD_TESTS=OFF -DPRICER_ENABLE_JIT=OFF
+          cmake --build build --parallel
+      - name: Smoke-test the endpoints
+        run: python server/smoke_test.py build/server/pricer_server 8137

@@ -91,11 +91,13 @@ From price to risk.
 
 ### Phase 5 — Productization (12–18 months)
 Make it usable by others.
-- [ ] Python bindings (pybind11/nanobind) + `pip install pricer`
-- [ ] CLI and REST/gRPC service with a job API
+- [x] Python bindings (pybind11/nanobind) + `pip install pricer`
+- [x] CLI and REST/gRPC service with a job API
+      *(pricer_cli + a POSIX-socket REST service with an async job API; gRPC not done)*
 - [ ] Market-data adapters and result persistence
 - [ ] Versioned releases (SemVer), docs site, examples gallery
-- **Exit criteria:** a quant prices a book from Python without touching C++.
+      *(v0.1.0 tagged + CHANGELOG; docs site / examples gallery pending)*
+- **Exit criteria:** a quant prices a book from Python without touching C++.  ✓
 
 ### Phase 6 — Distributed scale-out (18–24+ months)
 Beyond one machine.

@@ -37,6 +37,7 @@ include/pricer/   header-only core library
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
 python/           Python bindings (pybind11): `pip install .`
+server/           REST pricing service (POSIX sockets, no dependencies)
 ```
 
 | Example | Topic | Highlight |
@@ -159,6 +160,23 @@ so it is not built here yet.
 ./build/examples/pricer_cli iv --type call --price 10.4506 --S 100 --K 100 --r 0.05 --T 1
 ./build/examples/pricer_cli mc --type call --S 100 --K 100 --r 0.05 --sigma 0.2 --T 1 --paths 5000000
 ```
+
+## REST service
+
+A dependency-free HTTP service (POSIX sockets) exposes pricing over the network,
+including an async Monte Carlo job API:
+
+```sh
+cmake -S . -B build -DPRICER_BUILD_SERVER=ON && cmake --build build
+./build/server/pricer_server 8080 &
+curl 'http://127.0.0.1:8080/price?type=call&S=100&K=100&r=0.05&sigma=0.2&T=1'
+# {"price":10.45058357,"delta":0.63683065,...}
+curl 'http://127.0.0.1:8080/submit?type=call&S=100&K=100&r=0.05&sigma=0.2&T=1&paths=20000000'  # {"job_id":1}
+curl 'http://127.0.0.1:8080/job?id=1'   # {"status":"done","mc_price":...}
+```
+
+Endpoints: `/health`, `/price`, `/impliedvol`, `/mc`, `/submit`, `/job`.
+`python server/smoke_test.py build/server/pricer_server` runs an end-to-end check.
 
 ## Python
 

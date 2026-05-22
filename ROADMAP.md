@@ -71,10 +71,11 @@ Make the JIT compiler the real core.
 
 ### Phase 3 — Performance & scale-up (6–9 months)
 Single-node speed.
-- [ ] Thread-pool MC with deterministic reduction
+- [x] Thread-pool MC with deterministic reduction
 - [ ] SIMD path generation (AVX2/AVX-512/NEON via LLVM)
+      *(counter-based stateless RNG landed — ~1.6× faster, the enabler; explicit wide-SIMD intrinsics still to do)*
 - [ ] GPU backend (LLVM NVPTX / SPIR-V) sharing the same payoff IR
-- [ ] Variance reduction: antithetic, control variates, Sobol QMC
+- [x] Variance reduction: antithetic, control variates, Sobol QMC
 - **Exit criteria:** ≥10× over the Phase 1 baseline on CPU; GPU path for the
   vanilla MC engine.
 

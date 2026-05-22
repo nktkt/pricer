@@ -21,6 +21,7 @@ include/pricer/   header-only core library
   black_scholes.hpp      closed-form pricing + Greeks
   monte_carlo.hpp        generic terminal-value MC engine
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)
+  rng.hpp                counter-based RNG (stateless) for parallel/SIMD path generation
   variance_reduction.hpp antithetic & control-variate estimators
   qmc.hpp                quasi-Monte Carlo (low-discrepancy) + inverse-normal CDF
   implied_vol.hpp        implied-volatility solver (safeguarded Newton)
@@ -70,6 +71,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `local_vol_demo` | Dupire local vol | Local volatility recovered from a call-price surface |
 | `distributed_mc` | Distributed Monte Carlo | Sharded across worker processes; identical price for any worker count |
 | `market_data_demo` | Market data & persistence | Load quotes (CSV) → imply vol & Greeks → save results (CSV) |
+| `simd_paths` | Counter-based RNG | Stateless RNG path gen vs. std::mt19937 (~1.6× faster) |
 
 ## Requirements
 

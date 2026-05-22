@@ -95,8 +95,8 @@ Make it usable by others.
 - [x] CLI and REST/gRPC service with a job API
       *(pricer_cli + a POSIX-socket REST service with an async job API; gRPC not done)*
 - [ ] Market-data adapters and result persistence
-- [ ] Versioned releases (SemVer), docs site, examples gallery
-      *(v0.1.0 tagged + CHANGELOG; docs site / examples gallery pending)*
+- [x] Versioned releases (SemVer), docs site, examples gallery
+      *(v0.1.0 release + CHANGELOG; Doxygen docs site live at nktkt.github.io/pricer; examples/ dir as the gallery)*
 - **Exit criteria:** a quant prices a book from Python without touching C++.  ✓
 
 ### Phase 6 — Distributed scale-out (18–24+ months)

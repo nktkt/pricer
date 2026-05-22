@@ -7,6 +7,14 @@
 // instrument expressible in the grammar — including path-dependent ones, by
 // exposing path aggregates (terminal, average, max, min) as variables.
 //
+// `compile_batch(formula, varNames, width)` emits a vectorized kernel
+// `void payoff_v(const double* v, double* out)` that processes `width` paths at
+// once using `<width x double>` IR. Variables are laid out structure-of-arrays:
+// v[i*width + lane] is variable i for lane `lane`; results land in out[0..width).
+//
+// Both entry points cache compiled kernels by (width, variables, formula), so
+// repeating a formula returns the existing function pointer without recompiling.
+//
 // Grammar (precedence low → high):
 //   expr   := cmp
 //   cmp    := add (('<'|'>'|'<='|'>='|'=='|'!=') add)?   // yields 1.0 / 0.0
@@ -19,19 +27,23 @@
 // This header requires LLVM; only targets that link LLVM should include it.
 #pragma once
 #include <cctype>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Support/Alignment.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
@@ -40,13 +52,16 @@ namespace pricer {
 
 namespace detail {
 
-// Recursive-descent translator: formula text -> LLVM IR values, reading
-// variables from a `double*` function argument.
+// Recursive-descent translator: formula text -> LLVM IR values. Works for both
+// scalar (`Width == 1`, value type `double`) and vector (`Width > 1`, value type
+// `<Width x double>`) code generation — the arithmetic IRBuilder calls are
+// type-polymorphic, so only the leaves (constants, variable loads) differ.
 class PayoffParser {
 public:
     PayoffParser(llvm::IRBuilder<>& b, llvm::LLVMContext& ctx, llvm::Value* args,
-                 const std::map<std::string, unsigned>& vars)
-        : B(b), Ctx(ctx), Args(args), Vars(vars) {}
+                 const std::map<std::string, unsigned>& vars,
+                 llvm::Type* valTy, llvm::Type* eltTy, unsigned width)
+        : B(b), Ctx(ctx), Args(args), Vars(vars), ValTy(valTy), EltTy(eltTy), Width(width) {}
 
     llvm::Value* run(const std::string& src) {
         S = src;
@@ -62,11 +77,14 @@ private:
     llvm::LLVMContext& Ctx;
     llvm::Value* Args;
     const std::map<std::string, unsigned>& Vars;
+    llvm::Type* ValTy;   // double, or <Width x double>
+    llvm::Type* EltTy;   // always double (the storage element)
+    unsigned Width;
     std::string S;
     size_t pos = 0;
 
-    llvm::Type* dty() { return llvm::Type::getDoubleTy(Ctx); }
-    llvm::Constant* dbl(double x) { return llvm::ConstantFP::get(Ctx, llvm::APFloat(x)); }
+    llvm::Type* dty() { return ValTy; }
+    llvm::Constant* dbl(double x) { return llvm::ConstantFP::get(ValTy, x); }  // splats if vector
     [[noreturn]] void err(const std::string& m) { throw std::runtime_error("payoff formula: " + m); }
 
     void skipWs() { while (pos < S.size() && std::isspace((unsigned char)S[pos])) pos++; }
@@ -90,7 +108,7 @@ private:
                 pos += len;
                 llvm::Value* rhs = parseAdd();
                 // Map the boolean result to 1.0 / 0.0 so it composes arithmetically.
-                return B.CreateUIToFP(B.CreateFCmp(pred, lhs, rhs), dty());
+                return B.CreateUIToFP(B.CreateFCmp(pred, lhs, rhs), ValTy);
             }
         }
         return lhs;
@@ -160,10 +178,11 @@ private:
             return emitCall(name, a);
         }
 
-        auto it = Vars.find(name);  // variable: load from v[index]
+        auto it = Vars.find(name);  // variable: load lane(s) from the SoA buffer
         if (it == Vars.end()) err("unknown variable: " + name);
-        llvm::Value* gep = B.CreateConstInBoundsGEP1_64(dty(), Args, it->second);
-        return B.CreateLoad(dty(), gep);
+        llvm::Value* ptr =
+            B.CreateConstInBoundsGEP1_64(EltTy, Args, static_cast<uint64_t>(it->second) * Width);
+        return B.CreateAlignedLoad(ValTy, ptr, llvm::Align(8));
     }
 
     llvm::Value* emitCall(const std::string& name, const std::vector<llvm::Value*>& a) {
@@ -186,7 +205,8 @@ private:
 // JIT engine that turns payoff formulas into callable native functions.
 class PayoffJit {
 public:
-    using Fn = double (*)(const double*);  // payoff(v) where v holds the variables
+    using Fn = double (*)(const double*);              // scalar:  payoff(v)
+    using BatchFn = void (*)(const double*, double*);  // vector:  payoff_v(v, out)
 
     PayoffJit() {
         llvm::InitializeNativeTarget();
@@ -196,28 +216,65 @@ public:
         jit_ = std::move(*jit);
     }
 
-    // Compile `formula`, binding the given variable names to indices 0..n-1.
-    // The returned pointer reads those variables from its `const double*` argument.
+    // Compile `formula` (scalar). Variable names map to indices 0..n-1, read from
+    // the `const double*` argument. Cached by formula + variable list.
     Fn compile(const std::string& formula, const std::vector<std::string>& varNames) {
+        return reinterpret_cast<Fn>(static_cast<uintptr_t>(build(formula, varNames, /*width=*/1)));
+    }
+
+    // Compile a vectorized kernel processing `width` paths per call (SoA layout).
+    BatchFn compile_batch(const std::string& formula, const std::vector<std::string>& varNames,
+                          unsigned width) {
+        if (width < 2) throw std::runtime_error("compile_batch requires width >= 2");
+        return reinterpret_cast<BatchFn>(static_cast<uintptr_t>(build(formula, varNames, width)));
+    }
+
+    const std::string& last_ir() const { return last_ir_; }  // IR of the most recent build()
+    unsigned compiles() const { return compiles_; }          // number of actual JIT compiles (cache misses)
+
+private:
+    // Build (or fetch from cache) a kernel; returns its native address.
+    std::uint64_t build(const std::string& formula, const std::vector<std::string>& varNames,
+                        unsigned width) {
+        std::string key = std::to_string(width);
+        for (const auto& v : varNames) key += "|" + v;
+        key += "#" + formula;
+        if (auto it = cache_.find(key); it != cache_.end()) return it->second;
+
         auto ctx = std::make_unique<llvm::LLVMContext>();
         auto mod = std::make_unique<llvm::Module>("payoff_module", *ctx);
-        llvm::Type* dty = llvm::Type::getDoubleTy(*ctx);
+        llvm::Type* eltTy = llvm::Type::getDoubleTy(*ctx);
+        llvm::Type* valTy = (width <= 1)
+            ? eltTy
+            : static_cast<llvm::Type*>(llvm::FixedVectorType::get(eltTy, width));
         llvm::Type* pty = llvm::PointerType::getUnqual(*ctx);
-        llvm::FunctionType* fty = llvm::FunctionType::get(dty, {pty}, false);
 
-        const std::string name = "payoff_" + std::to_string(counter_++);
+        const bool scalar = (width <= 1);
+        llvm::FunctionType* fty = scalar
+            ? llvm::FunctionType::get(eltTy, {pty}, false)
+            : llvm::FunctionType::get(llvm::Type::getVoidTy(*ctx), {pty, pty}, false);
+
+        const std::string name = (scalar ? "payoff_" : "payoff_v_") + std::to_string(counter_++);
         llvm::Function* fn =
             llvm::Function::Create(fty, llvm::Function::ExternalLinkage, name, mod.get());
         fn->getArg(0)->setName("v");
+        if (!scalar) fn->getArg(1)->setName("out");
 
         llvm::IRBuilder<> builder(llvm::BasicBlock::Create(*ctx, "entry", fn));
         std::map<std::string, unsigned> vars;
         for (unsigned i = 0; i < varNames.size(); ++i) vars[varNames[i]] = i;
 
-        detail::PayoffParser parser(builder, *ctx, fn->getArg(0), vars);
-        builder.CreateRet(parser.run(formula));
+        detail::PayoffParser parser(builder, *ctx, fn->getArg(0), vars, valTy, eltTy, width);
+        llvm::Value* result = parser.run(formula);
+        if (scalar) {
+            builder.CreateRet(result);
+        } else {
+            builder.CreateAlignedStore(result, fn->getArg(1), llvm::Align(8));
+            builder.CreateRetVoid();
+        }
 
-        { llvm::raw_string_ostream os(last_ir_); last_ir_.clear(); mod->print(os, nullptr); }
+        last_ir_.clear();
+        { llvm::raw_string_ostream os(last_ir_); mod->print(os, nullptr); }
         if (llvm::verifyFunction(*fn)) throw std::runtime_error("IR verification failed");
 
         if (auto e = jit_->addIRModule(llvm::orc::ThreadSafeModule(std::move(mod), std::move(ctx)))) {
@@ -226,15 +283,17 @@ public:
         }
         auto sym = jit_->lookup(name);
         if (!sym) { llvm::consumeError(sym.takeError()); throw std::runtime_error("symbol lookup failed"); }
-        return sym->toPtr<Fn>();
+
+        ++compiles_;
+        const std::uint64_t addr = sym->getValue();
+        cache_.emplace(std::move(key), addr);
+        return addr;
     }
 
-    // LLVM IR text produced by the most recent compile() (for inspection/printing).
-    const std::string& last_ir() const { return last_ir_; }
-
-private:
     std::unique_ptr<llvm::orc::LLJIT> jit_;
+    std::unordered_map<std::string, std::uint64_t> cache_;
     unsigned counter_ = 0;
+    unsigned compiles_ = 0;
     std::string last_ir_;
 };
 

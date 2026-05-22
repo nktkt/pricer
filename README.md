@@ -33,6 +33,7 @@ tests/            CTest suite (dependency-free; DSL test needs LLVM)
 | `barrier_option` | Path-dependent product | Up-and-out barrier call via stepped MC |
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
 | `path_dependent` | Exotics from formulas | Asian / barrier / lookback / digital, each a one-line formula |
+| `simd_payoff` | Vectorized codegen | Same formula compiled to `<W x double>` SIMD IR; scalar vs. batch |
 
 ## Requirements
 
@@ -86,6 +87,15 @@ entry:
 `ST`, `avg`, `Smax`, `Smin` (plus `K`) to the DSL, so exotics become one-liners —
 e.g. an arithmetic Asian call is `max(avg - K, 0)` and an up-and-out barrier is
 `max(ST - K, 0) * (Smax < 130)`.
+
+Two more `PayoffJit` features round out the engine:
+
+- **Compiled-kernel cache** — `compile()` is keyed by `(width, variables, formula)`,
+  so repeating a formula returns the existing function pointer with no recompile.
+- **Vectorized codegen** — `compile_batch(formula, vars, W)` emits a
+  `void payoff_v(const double* v, double* out)` kernel that evaluates `W` paths at
+  once with `<W x double>` IR (see `simd_payoff`). The same parser produces scalar
+  or vector code; only the leaves (constant splats, vector loads) change.
 
 Supported grammar: numbers, variables (whichever names you bind), operators
 `+ - * /` and unary minus, comparisons `< > <= >= == !=` (yielding `1.0`/`0.0`),

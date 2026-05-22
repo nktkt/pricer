@@ -40,5 +40,26 @@ int main() {
     try { jit.compile("max(ST - K)", stk); } catch (const std::exception&) { threw = true; }
     check::is_true("bad arity throws", threw);
 
+    // Compiled-kernel cache: recompiling a formula returns the same pointer and
+    // does not trigger a second JIT compile.
+    const unsigned before = jit.compiles();
+    auto c1 = jit.compile("ST + K * 2", stk);
+    auto c2 = jit.compile("ST + K * 2", stk);
+    check::is_true("cache returns same fn", c1 == c2);
+    check::is_true("cache avoids recompile", jit.compiles() - before == 1);
+
+    // Vectorized (batch) kernel must match the scalar result lane-for-lane.
+    const unsigned Wd = 4;
+    auto sc = jit.compile("max(ST - K, 0)", stk);
+    auto bt = jit.compile_batch("max(ST - K, 0)", stk, Wd);
+    double v[8] = {120, 80, 100, 150,   100, 100, 100, 100};  // [ST x4][K x4]
+    double out[4];
+    bt(v, out);
+    for (unsigned l = 0; l < Wd; ++l) {
+        double sv[2] = {v[l], v[Wd + l]};
+        char nm[32]; std::snprintf(nm, sizeof nm, "batch lane %u", l);
+        check::approx(nm, out[l], sc(sv), 1e-12);
+    }
+
     return check::report("payoff_dsl");
 }

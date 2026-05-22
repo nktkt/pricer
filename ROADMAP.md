@@ -83,8 +83,8 @@ From price to risk.
 - [ ] Greeks via adjoint algorithmic differentiation (AAD)
       *(MC Greeks landed: bump+CRN and pathwise; full AAD tape still to do)*
 - [x] Yield-curve and volatility-surface construction
-- [ ] Model calibration (Heston, local vol) with least-squares solvers
-      *(Levenberg–Marquardt solver + SVI smile calibration landed; Heston/local-vol pending)*
+- [x] Model calibration (Heston, local vol) with least-squares solvers
+      *(LM solver + SVI smile + Heston char-function calibration landed; Dupire local-vol still to add)*
 - [x] Portfolio risk: VaR/ES, scenario engine *(xVA still to do)*
 - **Exit criteria:** full Greeks for a multi-asset book in one pass; calibration
   reproduces market quotes within tolerance.

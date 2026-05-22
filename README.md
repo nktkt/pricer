@@ -29,6 +29,8 @@ include/pricer/   header-only core library
   smile.hpp              least-squares quadratic volatility-smile calibration
   optimize.hpp           Levenberg–Marquardt least-squares solver (numerical Jacobian)
   svi.hpp                SVI smile model + least-squares calibration (uses optimize.hpp)
+  quadrature.hpp         Gauss–Legendre numerical integration
+  heston.hpp             Heston stochastic-vol pricing (char. function) + calibration
   payoff_jit.hpp         payoff-formula → LLVM IR → native-code compiler (needs LLVM)
 examples/         runnable demos built on the library
 tests/            CTest suite (dependency-free; DSL test needs LLVM)
@@ -52,6 +54,7 @@ python/           Python bindings (pybind11): `pip install .`
 | `pricer_cli` | Command-line tool | `price` / `iv` / `mc` sub-commands |
 | `vol_surface_demo` | Curve & vol surface | Discount curve, implied-vol surface, smile calibration |
 | `svi_calibration` | SVI model calibration | Fit an SVI smile to market quotes via Levenberg–Marquardt |
+| `heston_calibration` | Heston model calibration | Fit Heston to an option grid by least squares |
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # Each test is a standalone executable registered with CTest.
 find_package(Threads REQUIRED)
 foreach(t test_black_scholes test_greeks test_monte_carlo test_parallel test_variance_reduction
-          test_implied_vol test_greeks_mc test_risk)
+          test_implied_vol test_greeks_mc test_risk test_curve test_vol_surface test_smile)
   add_executable(${t} ${t}.cpp)
   target_link_libraries(${t} PRIVATE pricer Threads::Threads)
   target_include_directories(${t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

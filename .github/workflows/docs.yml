@@ -28,7 +28,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
 
       - name: Generate API reference
-        run: doxygen Doxyfile
+        run: |
+          mkdir -p build/docs
+          doxygen Doxyfile
 
       - name: Configure Pages (enables it on first run)
         uses: actions/configure-pages@v5

@@ -1,18 +1,24 @@
-// simd_paths.cpp — path-generation throughput: stateful vs. stateless RNG.
+// simd_paths.cpp — path-generation throughput: scalar vs. SIMD.
 //
 // This program benchmarks the cost of *generating GBM paths*, not pricing
-// accuracy. It compares two random-number sources for a European call:
+// accuracy. It compares three random-number sources for a European call:
 //   1. A stateful std::mt19937_64 + std::normal_distribution loop (the baseline
 //      every textbook Monte Carlo uses). The engine carries sequential state, so
 //      draw i depends on draws 0..i-1 and the loop cannot be reordered.
 //   2. The stateless, counter-based RNG (pricer::cb_normal): draw i is a pure
 //      function of (seed, i). That removes the carried state, so the loop is a
-//      tight, branch-light kernel the compiler can vectorize, and the result is
-//      reproducible no matter how the counters are split across lanes or threads.
+//      tight, branch-light kernel and the result is reproducible no matter how
+//      the counters are split across lanes or threads.
+//   3. The SIMD-vectorized counter-based engine (pricer::mc::price_terminal_cb_simd):
+//      the same stateless draws, but W=4 paths generated per iteration through
+//      the vectorized RNG, inverse-normal CDF and exp (simd.hpp). This is the
+//      payoff of (2): once a draw is a pure function of its counter, a batch of
+//      counters fits in one SIMD register.
 //
 // Throughput is reported in millions of paths per second (Mpaths/s).
 #include "pricer/black_scholes.hpp"
 #include "pricer/rng.hpp"
+#include "pricer/simd_mc.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -23,6 +29,13 @@
 using namespace pricer;
 
 namespace {
+
+// Lane count for reporting (1 when the vector extensions are unavailable).
+#if PRICER_HAVE_SIMD
+constexpr int kLanes = simd::kWidth;
+#else
+constexpr int kLanes = 1;
+#endif
 
 // Shared market parameters and the instrument under test.
 constexpr double kS     = 100.0;  // spot
@@ -72,9 +85,14 @@ int main() {
     // Analytic reference price; both methods should agree with this.
     const double exact = black_scholes_call(kS, kK, kR, kSigma, kT);
 
-    std::printf("Path-generation benchmark: stateful std::mt19937_64 vs. stateless counter-based RNG\n");
-    std::printf("Params: S=%.1f K=%.1f r=%.2f sigma=%.2f T=%.1f  paths=%ld\n\n",
+    std::printf("Path-generation benchmark: scalar vs. SIMD counter-based RNG\n");
+    std::printf("Params: S=%.1f K=%.1f r=%.2f sigma=%.2f T=%.1f  paths=%ld",
                 kS, kK, kR, kSigma, kT, kN);
+#if PRICER_HAVE_SIMD
+    std::printf("  (SIMD width=%d doubles)\n\n", simd::kWidth);
+#else
+    std::printf("  (SIMD unavailable: falls back to scalar)\n\n");
+#endif
 
     // -----------------------------------------------------------------------
     // Baseline: stateful std::mt19937_64 + std::normal_distribution.
@@ -94,7 +112,14 @@ int main() {
     const double cb_ms   = elapsed_ms(c0, c1);
     const double cb_mpps = throughput_mpps(kN, cb_ms);
 
-    const double speedup = (cb_ms > 0.0) ? base_ms / cb_ms : 0.0;
+    // -----------------------------------------------------------------------
+    // SIMD: stateless, vectorized pricer::mc::price_terminal_cb_simd.
+    // -----------------------------------------------------------------------
+    const auto s0 = std::chrono::high_resolution_clock::now();
+    const double simd_price = mc::price_terminal_cb_simd(call, kS, kR, kSigma, kT, kN);
+    const auto s1 = std::chrono::high_resolution_clock::now();
+    const double simd_ms   = elapsed_ms(s0, s1);
+    const double simd_mpps = throughput_mpps(kN, simd_ms);
 
     // -----------------------------------------------------------------------
     // Report.
@@ -105,7 +130,13 @@ int main() {
                 "stateful std::mt19937_64", base_price, base_ms, base_mpps);
     std::printf("%-28s  %12.6f  %10.2f  %14.2f\n",
                 "stateless counter-based", cb_price, cb_ms, cb_mpps);
-    std::printf("\nSpeedup (baseline_ms / cb_ms) = %.2fx\n\n", speedup);
+    std::printf("%-28s  %12.6f  %10.2f  %14.2f\n",
+                "SIMD counter-based", simd_price, simd_ms, simd_mpps);
+    std::printf("\nSpeedup vs. stateful baseline:  counter-based %.2fx,  SIMD %.2fx\n",
+                (cb_ms > 0.0) ? base_ms / cb_ms : 0.0,
+                (simd_ms > 0.0) ? base_ms / simd_ms : 0.0);
+    std::printf("Speedup SIMD vs. scalar counter-based = %.2fx\n\n",
+                (simd_ms > 0.0) ? cb_ms / simd_ms : 0.0);
 
     // -----------------------------------------------------------------------
     // Cross-check against the closed-form price.
@@ -113,14 +144,17 @@ int main() {
     std::printf("Analytic (Black-Scholes call) = %.6f\n", exact);
     std::printf("  stateful  abs err = %.6f\n", std::fabs(base_price - exact));
     std::printf("  counter   abs err = %.6f\n", std::fabs(cb_price - exact));
-    std::printf("Both Monte Carlo methods agree with the analytic price.\n\n");
+    std::printf("  SIMD      abs err = %.6f\n", std::fabs(simd_price - exact));
+    std::printf("All three Monte Carlo methods agree with the analytic price.\n\n");
 
     // -----------------------------------------------------------------------
     // Why the counter-based generator matters.
     // -----------------------------------------------------------------------
     std::printf("Note: the counter-based RNG is stateless — draw i depends only on\n");
-    std::printf("(seed, i), with no sequential state to carry between iterations. So path\n");
-    std::printf("generation is reproducible regardless of order, and it is the data-parallel\n");
-    std::printf("building block for SIMD / GPU / distributed path generation.\n");
+    std::printf("(seed, i), with no sequential state to carry between iterations. The SIMD\n");
+    std::printf("engine exploits exactly this: it generates W=%d paths per step in one vector\n",
+                kLanes);
+    std::printf("register (RNG, inverse-normal CDF and exp all vectorized), and the same\n");
+    std::printf("property makes it the building block for GPU / distributed path generation.\n");
     return 0;
 }

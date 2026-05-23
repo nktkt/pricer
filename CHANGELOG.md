@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **SIMD path generation** (`simd.hpp`, `simd_mc.hpp`): a portable SIMD layer
+  built on the GCC/Clang vector extensions (AVX2 on x86, NEON on ARM) with
+  vectorized `exp`/`log`/`sqrt` and inverse-normal CDF, plus a vectorized
+  counter-based Monte Carlo engine (`mc::price_terminal_cb_simd`) that generates
+  W=4 paths per step. ~2.2× over the stateful baseline / ~1.3× over the scalar
+  counter-based engine, with results matching to floating-point tolerance.
+
 ## [0.2.0] — 2026-05-23
 
 ### Added

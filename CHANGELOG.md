@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Container deployment**: a multi-stage `Dockerfile` (slim, non-root runtime
+  carrying only the server binary) and a `docker-compose.yml`, plus a `docker` CI
+  job that builds the image and checks the container serves `/health`, `/price`
+  and `/metrics`.
+
 ## [0.4.0] — 2026-05-23
 
 ### Added

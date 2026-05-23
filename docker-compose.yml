@@ -1,0 +1,10 @@
+# Convenience wrapper to build and run the pricer REST service.
+#   docker compose up --build
+#   curl http://127.0.0.1:8080/metrics
+services:
+  pricer:
+    build: .
+    image: pricer-server
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

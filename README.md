@@ -237,6 +237,24 @@ the Prometheus text format, and every request is written to stderr as a structur
 JSON access log line. `python server/smoke_test.py build/server/pricer_server` runs
 an end-to-end check (including `/metrics`).
 
+## Docker
+
+The REST service ships as a container. A multi-stage build compiles it and the
+runtime image carries only the binary (the server has no third-party
+dependencies), running as a non-root user:
+
+```sh
+docker build -t pricer-server .
+docker run --rm -p 8080:8080 pricer-server
+curl 'http://127.0.0.1:8080/price?type=call&S=100&K=100&r=0.05&sigma=0.2&T=1'
+curl http://127.0.0.1:8080/metrics
+# or, with compose:
+docker compose up --build
+```
+
+A CI job builds the image and checks the container serves `/health`, `/price`
+and `/metrics`.
+
 ## Python
 
 The core is exposed to Python via pybind11 — price a book without touching C++:

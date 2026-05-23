@@ -68,3 +68,20 @@ jobs:
           cmake --build build --parallel
       - name: Smoke-test the endpoints
         run: python server/smoke_test.py build/server/pricer_server 8137
+
+  docker:
+    name: docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the server image
+        run: docker build -t pricer-server:ci .
+      - name: Run the container and check endpoints (incl. /metrics)
+        run: |
+          docker run -d --rm -p 8080:8080 --name pricer_ci pricer-server:ci
+          for _ in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8080/health && break || sleep 1
+          done
+          curl -sf 'http://127.0.0.1:8080/price?type=call&S=100&K=100&r=0.05&sigma=0.2&T=1'
+          curl -sf http://127.0.0.1:8080/metrics | grep -q pricer_requests_total
+          docker stop pricer_ci

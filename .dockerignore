@@ -1,0 +1,19 @@
+# Keep the build context small: only CMakeLists.txt, include/ and server/ are
+# copied by the Dockerfile. Everything below is irrelevant to the server build.
+.git
+.github
+.venv
+build
+build-*
+docs
+examples
+tests
+python
+*.md
+Doxyfile
+.gitignore
+.dockerignore
+docker-compose.yml
+**/__pycache__
+**/*.so
+**/*.o

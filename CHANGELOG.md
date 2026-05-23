@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Python bindings for the v0.3.0 features**: SIMD and multicore+SIMD Monte
+  Carlo (`mc_price_simd`, `mc_price_parallel_simd`), book-level Greeks in one AAD
+  sweep (`Position`, `BookGreeks`, `book_greeks_aad`), and xVA (`DiscountCurve`,
+  `SurvivalCurve`, `ExposureProfile`, `european_exposure_profile`, `cva`, `dva`,
+  `bcva`). `python/example_book.py` now shows one-pass book Greeks and CVA.
+
 ## [0.3.0] — 2026-05-23
 
 ### Added

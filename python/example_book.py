@@ -91,6 +91,19 @@ def main():
     print()
 
     # -------------------------------------------------------------------
+    # 2b) The same book risk in ONE reverse-mode AAD sweep
+    # -------------------------------------------------------------------
+    book = [pricer.Position(t, S0, strike, R, SIGMA, maturity, qty)
+            for (t, strike, maturity, qty) in POSITIONS]
+    bg = pricer.book_greeks_aad(book)
+    print("Book Greeks from one AAD sweep (pricer.book_greeks_aad):")
+    print("  Book value  : %14.6f  (matches manual: %s)" % (
+        bg.value, abs(bg.value - total_value) < 1e-9))
+    print("  Total delta : %14.6f  (sum of one-pass position deltas)" % sum(bg.delta))
+    print("  Total vega  : %14.6f" % sum(bg.vega))
+    print()
+
+    # -------------------------------------------------------------------
     # 3) Cross-check one option's price: closed form vs MC vs QMC
     # -------------------------------------------------------------------
     chk_type, chk_K, chk_T, _ = POSITIONS[0]
@@ -138,6 +151,21 @@ def main():
     print("  Book value V0 : %14.6f" % v0)
     print("  VaR (99%%)     : %14.6f" % risk.var)
     print("  ES  (99%%)     : %14.6f" % risk.es)
+    print()
+
+    # -------------------------------------------------------------------
+    # 6) Counterparty credit risk (CVA) on the first position
+    # -------------------------------------------------------------------
+    grid = [i / 12.0 for i in range(1, int(round(chk_T * 12)) + 1)]  # monthly to expiry
+    ep = pricer.european_exposure_profile(chk_type, S0, chk_K, R, SIGMA, chk_T, grid,
+                                          n_paths=200000, seed=SEED)
+    disc = pricer.DiscountCurve([0.5, 1.0, 2.0], [R, R, R])
+    counterparty = pricer.SurvivalCurve.from_spread(0.02, 0.4)  # 200bp spread, 40% recovery
+    cva_v = pricer.cva(ep, counterparty, disc, 0.4)
+    print("Counterparty CVA on %s K=%.2f T=%.2f (200bp spread, 40%% recovery):" % (
+        type_name(chk_type), chk_K, chk_T))
+    print("  Risk-free price : %14.6f" % cf)
+    print("  CVA             : %14.6f  (%.2f%% of price)" % (cva_v, 100.0 * cva_v / cf))
     print("=" * 72)
 
 

@@ -31,15 +31,44 @@ def main():
     iv = pricer.implied_vol(OptionType.Call, call, S, K, r, T)
     approx(iv, sigma, 1e-5)
 
-    # Monte Carlo (serial, parallel, quasi)
+    # Monte Carlo (serial, parallel, quasi, SIMD, multicore+SIMD)
     approx(pricer.mc_price(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000), call, 0.05)
     approx(pricer.mc_price_parallel(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000, threads=4),
            call, 0.05)
     approx(pricer.qmc_price(OptionType.Call, S, K, r, sigma, T, n=1_000_000), call, 0.01)
+    approx(pricer.mc_price_simd(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000), call, 0.05)
+    # Multicore+SIMD is deterministic in the thread count (bit-identical).
+    p_a = pricer.mc_price_parallel_simd(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000, threads=2)
+    p_b = pricer.mc_price_parallel_simd(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000, threads=8)
+    approx(p_a, call, 0.05)
+    assert p_a == p_b, "parallel+SIMD must be bit-identical across thread counts"
 
     # Risk: VaR/ES on a tiny P&L sample
     rm = pricer.var_es([1.0, -2.0, -3.0, 0.5, -5.0, -1.0], 0.8)
     assert rm.es >= rm.var > 0.0
+
+    # Book-level Greeks from one reverse-mode AAD sweep.
+    book = [
+        pricer.Position(OptionType.Call, 100.0, 100.0, 0.05, 0.20, 1.0, 10.0),
+        pricer.Position(OptionType.Put, 90.0, 95.0, 0.05, 0.25, 0.5, -5.0),
+    ]
+    bg = pricer.book_greeks_aad(book)
+    book_value = sum(
+        p.qty * pricer.black_scholes_price(p.type, p.S, p.K, p.r, p.sigma, p.T) for p in book
+    )
+    approx(bg.value, book_value, 1e-9)
+    g0 = pricer.black_scholes_greeks(OptionType.Call, 100.0, 100.0, 0.05, 0.20, 1.0)
+    approx(bg.delta[0], 10.0 * g0.delta, 1e-7)  # one-pass delta == qty * analytic delta
+    approx(bg.vega[0], 10.0 * g0.vega, 1e-7)
+
+    # xVA: exposure profile -> CVA / DVA for a long European call.
+    grid = [i / 12.0 for i in range(1, 13)]
+    ep = pricer.european_exposure_profile(OptionType.Call, S, K, 0.03, sigma, T, grid, n_paths=200_000)
+    assert len(ep.times) == len(grid) and max(ep.ene) <= 1e-12  # long option: no negative exposure
+    disc = pricer.DiscountCurve([0.5, 1.0, 2.0], [0.03, 0.03, 0.03])
+    cp = pricer.SurvivalCurve.from_spread(0.02, 0.4)
+    assert pricer.cva(ep, cp, disc, 0.4) > 0.0
+    approx(pricer.dva(ep, cp, disc, 0.4), 0.0, 1e-12)  # DVA == 0 for a long option
 
     print("all python tests passed; pricer", pricer.__version__)
 

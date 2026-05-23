@@ -43,7 +43,16 @@ inline std::vector<Token> tokenize(const std::string& s) {
         if (std::isdigit((unsigned char)c) || c == '.') {
             size_t j = i;
             while (j < s.size() && (std::isdigit((unsigned char)s[j]) || s[j] == '.')) ++j;
-            out.push_back({Tok::Num, std::stod(s.substr(i, j - i)), {}});
+            const std::string lit = s.substr(i, j - i);
+            double val = 0.0;
+            // std::stod throws std::invalid_argument (e.g. ".") or std::out_of_range
+            // (huge magnitude); funnel both into the lexer's own error type.
+            try {
+                val = std::stod(lit);
+            } catch (const std::exception&) {
+                err("invalid number '" + lit + "'");
+            }
+            out.push_back({Tok::Num, val, {}});
             i = j;
         } else if (std::isalpha((unsigned char)c) || c == '_') {
             size_t j = i;
@@ -94,16 +103,29 @@ public:
 private:
     std::vector<Token> t_;
     size_t p_ = 0;
+    int depth_ = 0;
+    static constexpr int kMaxDepth = 512;  // reject adversarially deep nesting (no stack overflow)
 
     const Token& peek() const { return t_[p_]; }
     Token next() { return t_[p_++]; }
     [[noreturn]] void err(const std::string& m) { throw std::runtime_error("payoff parser: " + m); }
+
+    // RAII guard on the mutually-recursive descent (expr via parens/args, factor
+    // via unary minus): bounds recursion so a pathological formula cannot blow the
+    // stack — it gets a clean parse error instead.
+    struct DepthGuard {
+        Parser* self;
+        explicit DepthGuard(Parser* s) : self(s) {
+            if (++self->depth_ > kMaxDepth) s->err("expression nested too deeply");
+        }
+        ~DepthGuard() { --self->depth_; }
+    };
     void expect(Tok k) { if (peek().kind != k) err("unexpected token"); }
     bool is_op(const char* s) const { return peek().kind == Tok::Op && peek().text == s; }
 
     static NodePtr make(NodeType t) { auto n = std::make_shared<Node>(); n->type = t; return n; }
 
-    NodePtr expr() { return cmp(); }
+    NodePtr expr() { DepthGuard g(this); return cmp(); }
     NodePtr cmp() {
         NodePtr a = add();
         if (peek().kind == Tok::Op) {
@@ -138,6 +160,7 @@ private:
         return a;
     }
     NodePtr factor() {
+        DepthGuard g(this);
         if (is_op("-")) {
             next();
             auto n = make(NodeType::Unary);

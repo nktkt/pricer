@@ -11,6 +11,18 @@ All notable changes to this project are documented here. The format follows
   carrying only the server binary) and a `docker-compose.yml`, plus a `docker` CI
   job that builds the image and checks the container serves `/health`, `/price`
   and `/metrics`.
+- **DSL parser robustness tests** (`test_payoff_fuzz`): property and fuzz tests
+  asserting `parse()` never crashes on arbitrary input (20k random + adversarial
+  cases), that syntax vs. semantic errors are rejected at the right layer, that
+  valid formulas round-trip through the pretty-printer, and that deep nesting is
+  bounded.
+
+### Changed
+- **Hardened the payoff parser** (an untrusted-input surface, since the JIT
+  compiles user formulas): recursion is now depth-bounded, so adversarially
+  nested input gets a clean parse error instead of a stack overflow, and a
+  malformed number literal raises the parser's own error type rather than leaking
+  `std::invalid_argument` / `std::out_of_range` from `std::stod`.
 
 ## [0.4.0] — 2026-05-23
 

@@ -36,7 +36,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.3.0";
+    m.attr("__version__") = "0.4.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)

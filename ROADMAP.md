@@ -91,9 +91,11 @@ From price to risk.
 - [x] Yield-curve and volatility-surface construction
 - [x] Model calibration (Heston, local vol) with least-squares solvers
       *(LM solver + SVI smile + Heston char-function calibration + Dupire local vol)*
-- [x] Portfolio risk: VaR/ES, scenario engine *(xVA still to do)*
+- [x] Portfolio risk: VaR/ES, scenario engine, basic xVA
+      *(VaR/ES `risk.hpp`; `xva.hpp` — GBM exposure-simulation scenario engine + CVA/DVA/BCVA against a hazard-rate survival curve)*
 - **Exit criteria:** full Greeks for a multi-asset book in one pass; calibration
-  reproduces market quotes within tolerance.
+  reproduces market quotes within tolerance. ✓
+      *(`portfolio.hpp` `book_greeks_aad` returns a multi-name book's value and every position's delta/vega from ONE reverse-mode sweep — matches closed-form to ~1e-13; Heston/SVI calibration reproduces quotes within tolerance.)*
 
 ### Phase 5 — Productization (12–18 months)
 Make it usable by others.

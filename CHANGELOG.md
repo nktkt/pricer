@@ -18,6 +18,13 @@ All notable changes to this project are documented here. The format follows
   cores with a deterministic, thread-count-independent (bit-identical) result.
   `examples/scale_benchmark.cpp` shows the full speedup ladder — ~12.8× over the
   Phase-1 baseline on a 10-core machine, meeting the Phase-3 ≥10× CPU target.
+- **xVA** (`xva.hpp`): a GBM exposure-simulation scenario engine plus CVA, DVA
+  and bilateral CVA against a hazard-rate survival curve and a discount curve
+  (`examples/xva_demo.cpp`).
+- **Book-level Greeks in one AAD sweep** (`portfolio.hpp`): `book_greeks_aad`
+  returns a multi-name book's value and every position's delta/vega from a single
+  reverse-mode pass (`examples/portfolio_aad.cpp`), completing the Phase-4 exit
+  criterion (full Greeks for a multi-asset book in one pass).
 
 ## [0.2.0] — 2026-05-23
 

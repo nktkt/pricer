@@ -115,6 +115,7 @@ Beyond one machine.
 - [ ] Work scheduling, fault tolerance, deterministic global aggregation
       *(deterministic global aggregation done — bit-identical for any worker count; scheduling/fault-tolerance pending)*
 - [ ] Observability: metrics, tracing, cost/perf dashboards
+      *(REST server exposes Prometheus `/metrics` — request/latency/job/uptime counters — plus a structured JSON access log; distributed tracing and dashboards pending)*
 - [ ] Cloud-native deployment (containers, autoscaling)
 - **Exit criteria:** linear scaling of a large MC job across N nodes with
   reproducible results.

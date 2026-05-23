@@ -228,10 +228,14 @@ curl 'http://127.0.0.1:8080/price?type=call&S=100&K=100&r=0.05&sigma=0.2&T=1'
 # {"price":10.45058357,"delta":0.63683065,...}
 curl 'http://127.0.0.1:8080/submit?type=call&S=100&K=100&r=0.05&sigma=0.2&T=1&paths=20000000'  # {"job_id":1}
 curl 'http://127.0.0.1:8080/job?id=1'   # {"status":"done","mc_price":...}
+curl 'http://127.0.0.1:8080/metrics'    # Prometheus counters: requests, latency, jobs, uptime
 ```
 
-Endpoints: `/health`, `/price`, `/impliedvol`, `/mc`, `/submit`, `/job`.
-`python server/smoke_test.py build/server/pricer_server` runs an end-to-end check.
+Endpoints: `/health`, `/price`, `/impliedvol`, `/mc`, `/submit`, `/job`, `/metrics`.
+**Observability:** `/metrics` exposes request, latency, job and uptime counters in
+the Prometheus text format, and every request is written to stderr as a structured
+JSON access log line. `python server/smoke_test.py build/server/pricer_server` runs
+an end-to-end check (including `/metrics`).
 
 ## Python
 

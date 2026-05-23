@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Server observability**: the REST service exposes a Prometheus `/metrics`
+  endpoint (request, response-class, per-endpoint latency, async-job and uptime
+  counters) and writes a structured JSON access-log line to stderr for every
+  request; the smoke test now covers `/metrics`.
 - **Python bindings for the v0.3.0 features**: SIMD and multicore+SIMD Monte
   Carlo (`mc_price_simd`, `mc_price_parallel_simd`), book-level Greeks in one AAD
   sweep (`Position`, `BookGreeks`, `book_greeks_aad`), and xVA (`DiscountCurve`,

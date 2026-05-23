@@ -19,6 +19,12 @@ def get(base, path):
         return json.loads(r.read().decode())
 
 
+def get_text(base, path):
+    """Fetch a non-JSON endpoint, returning (content_type, body_text)."""
+    with urllib.request.urlopen(base + path, timeout=5) as r:
+        return r.headers.get("Content-Type", ""), r.read().decode()
+
+
 def main():
     if len(sys.argv) < 2:
         print("usage: smoke_test.py <server_binary> [port]")
@@ -82,6 +88,16 @@ def main():
                 print("ok   404 on unknown endpoint")
             else:
                 print("FAIL 404:", e.code); ok = False
+
+        # Observability: /metrics exposes Prometheus counters as text/plain, and
+        # must reflect the requests made above (total > 0 and at least one 4xx).
+        ctype, metrics = get_text(base, "/metrics")
+        needed = ("pricer_requests_total", "pricer_endpoint_requests_total",
+                  'pricer_responses_total{class="4xx"}')
+        if "text/plain" in ctype and all(tok in metrics for tok in needed):
+            print("ok   /metrics exposes Prometheus counters")
+        else:
+            print("FAIL metrics:", ctype, repr(metrics[:120])); ok = False
 
         print("ALL PASSED" if ok else "SMOKE FAILED")
         return 0 if ok else 1

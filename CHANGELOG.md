@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-05-23
+
+### Added
+- **Digital (binary) options** (`digital.hpp`): cash-or-nothing and
+  asset-or-nothing options, each with a closed form and a counter-based Monte
+  Carlo engine (`digital_price`, `digital_price_mc`) that cross-check.
+  - **Cash-or-nothing** pays a fixed `cash` if in the money
+    (`cash·e^{-rT}·N(±d2)`); **asset-or-nothing** pays the terminal `S_T` if in
+    the money (`S·e^{-qT}·N(±d1)`).
+  - Anchored by the **exact vanilla decomposition** (a vanilla call equals the
+    asset-or-nothing call minus `K` cash-or-nothing calls with `cash = 1`), so the
+    digitals reprice Black–Scholes exactly, plus **cash parity**
+    (call + put = `e^{-rT}`), **asset parity** (call + put = `S·e^{-qT}`), and the
+    **digital = −∂C/∂K** identity (a cash-or-nothing call is the negative strike
+    derivative of the vanilla call).
+  - Exposed through the Python bindings (`DigitalType`, `digital_price`,
+    `digital_price_mc`); both carry the continuous dividend yield `q`. Covered by
+    `test_digital` and demonstrated in `examples/digital_options.cpp`.
+
 ## [0.12.0] — 2026-05-23
 
 ### Added
@@ -232,7 +251,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/nktkt/pricer/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/nktkt/pricer/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/nktkt/pricer/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/nktkt/pricer/compare/v0.9.0...v0.10.0

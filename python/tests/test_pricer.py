@@ -153,6 +153,16 @@ def main():
     approx(pricer.spread_price_mc(OptionType.Call, 100.0, 100.0, 0.0, r, 0.20, 0.30, 0.4, T,
                                   n_paths=400_000), marg, 0.10)
 
+    # Digital (binary) options: the exact vanilla decomposition and the MC cross-check.
+    from pricer import DigitalType as DT
+    cash_c = pricer.digital_price(OptionType.Call, DT.CashOrNothing, S, K, r, sigma, T)
+    asset_c = pricer.digital_price(OptionType.Call, DT.AssetOrNothing, S, K, r, sigma, T)
+    approx(asset_c - K * cash_c, call, 1e-10)  # call = asset-or-nothing - K*cash-or-nothing
+    cash_p = pricer.digital_price(OptionType.Put, DT.CashOrNothing, S, K, r, sigma, T)
+    approx(cash_c + cash_p, e ** (-r * T), 1e-12)  # cash-or-nothing parity
+    approx(pricer.digital_price_mc(OptionType.Call, DT.CashOrNothing, S, K, r, sigma, T,
+                                   n_paths=2_000_000), cash_c, 0.01)
+
     print("all python tests passed; pricer", pricer.__version__)
 
 

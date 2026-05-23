@@ -1,7 +1,7 @@
 # pricer
 
 A header-only C++17 quant library: Black–Scholes, Monte Carlo, American /
-Bermudan (early-exercise), path-dependent exotics (Asian / barrier / lookback)
+Bermudan (early-exercise), path-dependent exotics (Asian / barrier / lookback / digital)
 and multi-asset baskets / spreads pricing, model calibration (SVI, SABR, Heston,
 Dupire) and exact Greeks by
 automatic differentiation, counterparty risk (xVA), and a **runtime payoff
@@ -28,6 +28,7 @@ include/pricer/   header-only core library
   american.hpp           American options: CRR binomial tree + Longstaff–Schwartz LSM
   bermudan.hpp           Bermudan options: LSM over a finite (any) exercise schedule
   basket.hpp             multi-asset options: basket (correlated GBM) + spread / exchange (Margrabe, Kirk)
+  digital.hpp            digital (binary) options: cash-or-nothing / asset-or-nothing (closed form + MC)
   exotics.hpp            path-dependent exotics: Asian / barrier / lookback (closed form + MC w/ BGK)
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)
   rng.hpp                counter-based RNG (stateless) for parallel/SIMD path generation
@@ -75,6 +76,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `american_option` | Early-exercise options | American put: CRR binomial tree vs. Longstaff–Schwartz LSM; early-exercise premium |
 | `bermudan_option` | Finite exercise schedule | Bermudan put climbs from the European to the American value as exercise dates fill in |
 | `basket_options` | Multi-asset (correlated GBM) | Basket and spread/exchange options: geometric closed form, Margrabe & Kirk vs. Monte Carlo |
+| `digital_options` | Binary options | Cash-/asset-or-nothing closed form vs. MC; the exact vanilla decomposition |
 | `exotic_options` | Path-dependent exotics | Asian / barrier / lookback: each closed form vs. Monte Carlo (BGK-corrected) agree |
 | `payoff_interpret` | Payoff DSL without LLVM | Parse a formula → typed AST → tree-walking interpreter |
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |

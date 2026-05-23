@@ -11,6 +11,7 @@ from ._pricer import (  # noqa: F401
     OptionType,
     AverageType,
     BarrierType,
+    DigitalType,
     Greeks,
     RiskMeasures,
     Position,
@@ -53,6 +54,8 @@ from ._pricer import (  # noqa: F401
     margrabe_exchange_price,
     spread_kirk_price,
     spread_price_mc,
+    digital_price,
+    digital_price_mc,
     __version__,
 )
 
@@ -60,6 +63,7 @@ __all__ = [
     "OptionType",
     "AverageType",
     "BarrierType",
+    "DigitalType",
     "Greeks",
     "RiskMeasures",
     "Position",
@@ -102,5 +106,7 @@ __all__ = [
     "margrabe_exchange_price",
     "spread_kirk_price",
     "spread_price_mc",
+    "digital_price",
+    "digital_price_mc",
     "__version__",
 ]

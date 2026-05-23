@@ -16,6 +16,7 @@
 #include "pricer/bermudan.hpp"
 #include "pricer/black_scholes.hpp"
 #include "pricer/curve.hpp"
+#include "pricer/digital.hpp"
 #include "pricer/exotics.hpp"
 #include "pricer/implied_vol.hpp"
 #include "pricer/monte_carlo.hpp"
@@ -40,7 +41,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.12.0";
+    m.attr("__version__") = "0.13.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
@@ -55,6 +56,10 @@ PYBIND11_MODULE(_pricer, m) {
         .value("UpIn", BarrierType::UpIn)
         .value("DownOut", BarrierType::DownOut)
         .value("DownIn", BarrierType::DownIn);
+
+    py::enum_<DigitalType>(m, "DigitalType")
+        .value("CashOrNothing", DigitalType::CashOrNothing)
+        .value("AssetOrNothing", DigitalType::AssetOrNothing);
 
     py::class_<Greeks>(m, "Greeks")
         .def_readonly("price", &Greeks::price)
@@ -259,6 +264,15 @@ PYBIND11_MODULE(_pricer, m) {
           py::arg("K"), py::arg("r"), py::arg("sigma1"), py::arg("sigma2"), py::arg("rho"),
           py::arg("T"), py::arg("n_paths") = 500000, py::arg("seed") = 12345, py::arg("q1") = 0.0,
           py::arg("q2") = 0.0, py::call_guard<py::gil_scoped_release>());
+
+    // --- digital (binary) options: cash-or-nothing / asset-or-nothing ---
+    m.def("digital_price", &digital_price, py::arg("type"), py::arg("kind"), py::arg("S"),
+          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("cash") = 1.0,
+          py::arg("q") = 0.0);
+    m.def("digital_price_mc", &digital_price_mc, py::arg("type"), py::arg("kind"), py::arg("S"),
+          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("n_paths") = 500000,
+          py::arg("seed") = 12345, py::arg("cash") = 1.0, py::arg("q") = 0.0,
+          py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

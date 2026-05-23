@@ -82,7 +82,9 @@ Make the JIT compiler the real core.
       multi-asset options on correlated GBM (Cholesky) — the exact
       geometric-basket and Margrabe exchange-option closed forms anchor the
       arithmetic-basket / spread Monte Carlo (Kirk's approximation for non-zero
-      spread strikes).)*
+      spread strikes). `digital.hpp` adds cash-or-nothing / asset-or-nothing
+      binary options, validated by the exact vanilla decomposition (call =
+      asset-or-nothing − K·cash-or-nothing).)*
 
 ### Phase 3 — Performance & scale-up (6–9 months)
 Single-node speed.

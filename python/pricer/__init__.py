@@ -9,6 +9,8 @@ Thin Python package over the compiled ``_pricer`` extension. Example::
 """
 from ._pricer import (  # noqa: F401
     OptionType,
+    AverageType,
+    BarrierType,
     Greeks,
     RiskMeasures,
     Position,
@@ -32,11 +34,19 @@ from ._pricer import (  # noqa: F401
     cva,
     dva,
     bcva,
+    geometric_asian_price,
+    asian_price_mc,
+    barrier_price,
+    barrier_price_mc,
+    lookback_floating_price,
+    lookback_floating_price_mc,
     __version__,
 )
 
 __all__ = [
     "OptionType",
+    "AverageType",
+    "BarrierType",
     "Greeks",
     "RiskMeasures",
     "Position",
@@ -60,5 +70,11 @@ __all__ = [
     "cva",
     "dva",
     "bcva",
+    "geometric_asian_price",
+    "asian_price_mc",
+    "barrier_price",
+    "barrier_price_mc",
+    "lookback_floating_price",
+    "lookback_floating_price_mc",
     "__version__",
 ]

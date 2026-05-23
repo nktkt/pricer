@@ -14,6 +14,7 @@
 
 #include "pricer/black_scholes.hpp"
 #include "pricer/curve.hpp"
+#include "pricer/exotics.hpp"
 #include "pricer/implied_vol.hpp"
 #include "pricer/monte_carlo.hpp"
 #include "pricer/parallel.hpp"
@@ -36,11 +37,21 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.8.0";
+    m.attr("__version__") = "0.9.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
         .value("Put", OptionType::Put);
+
+    py::enum_<AverageType>(m, "AverageType")
+        .value("Arithmetic", AverageType::Arithmetic)
+        .value("Geometric", AverageType::Geometric);
+
+    py::enum_<BarrierType>(m, "BarrierType")
+        .value("UpOut", BarrierType::UpOut)
+        .value("UpIn", BarrierType::UpIn)
+        .value("DownOut", BarrierType::DownOut)
+        .value("DownIn", BarrierType::DownIn);
 
     py::class_<Greeks>(m, "Greeks")
         .def_readonly("price", &Greeks::price)
@@ -166,6 +177,28 @@ PYBIND11_MODULE(_pricer, m) {
 
     // --- book risk: all positions' delta/vega from one reverse-mode AAD sweep ---
     m.def("book_greeks_aad", &book_greeks_aad, py::arg("book"));
+
+    // --- path-dependent exotics: Asian, barrier, lookback ---
+    m.def("geometric_asian_price", &geometric_asian_price, py::arg("type"), py::arg("S"),
+          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("n"), py::arg("q") = 0.0);
+    m.def("asian_price_mc", &asian_price_mc, py::arg("type"), py::arg("avg"), py::arg("S"),
+          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("n_steps") = 250,
+          py::arg("n_paths") = 500000, py::arg("seed") = 12345, py::arg("q") = 0.0,
+          py::call_guard<py::gil_scoped_release>());
+    m.def("barrier_price", &barrier_price, py::arg("type"), py::arg("barrier"), py::arg("S"),
+          py::arg("K"), py::arg("B"), py::arg("r"), py::arg("sigma"), py::arg("T"),
+          py::arg("q") = 0.0);
+    m.def("barrier_price_mc", &barrier_price_mc, py::arg("type"), py::arg("barrier"), py::arg("S"),
+          py::arg("K"), py::arg("B"), py::arg("r"), py::arg("sigma"), py::arg("T"),
+          py::arg("n_steps") = 250, py::arg("n_paths") = 500000, py::arg("seed") = 12345,
+          py::arg("q") = 0.0, py::arg("continuity_correction") = true,
+          py::call_guard<py::gil_scoped_release>());
+    m.def("lookback_floating_price", &lookback_floating_price, py::arg("type"), py::arg("S"),
+          py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("q") = 0.0);
+    m.def("lookback_floating_price_mc", &lookback_floating_price_mc, py::arg("type"), py::arg("S"),
+          py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("n_steps") = 250,
+          py::arg("n_paths") = 500000, py::arg("seed") = 12345, py::arg("q") = 0.0,
+          py::arg("continuity_correction") = true, py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

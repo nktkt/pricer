@@ -6,6 +6,29 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-05-23
+
+### Added
+- **Path-dependent exotic options** (`exotics.hpp`): Asian, barrier and lookback
+  options, each priced two ways that cross-check.
+  - **Asian** (average-price, fixed strike): an exact closed form for the
+    discretely-monitored geometric average (the geometric average of GBM is
+    lognormal) plus a Monte Carlo engine for arithmetic *and* geometric averaging.
+  - **Barrier** (single barrier, continuous monitoring): the Reiner–Rubinstein
+    closed form for all eight up/down × in/out × call/put cases (knock-in plus the
+    matching knock-out equals the vanilla — parity), plus a Monte Carlo engine.
+  - **Lookback** (floating strike): the Conze–Viswanathan / Goldman–Sosin–Gatto
+    closed form plus a Monte Carlo engine.
+  - The barrier and lookback Monte Carlo engines apply the
+    **Broadie–Glasserman–Kou continuity correction** (shifting the monitored
+    barrier / running extreme by `exp(±0.5826·σ·√dt)`) so discrete stepping
+    converges to the continuous-monitoring closed form; cross-checked in
+    `test_exotics` and demonstrated in `examples/exotic_options.cpp`.
+  - Exposed through the Python bindings (`geometric_asian_price`, `asian_price_mc`,
+    `barrier_price`, `barrier_price_mc`, `lookback_floating_price`,
+    `lookback_floating_price_mc`, with `AverageType` / `BarrierType` enums). All
+    carry the continuous dividend yield `q`.
+
 ## [0.8.0] — 2026-05-23
 
 ### Added
@@ -146,7 +169,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/nktkt/pricer/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/nktkt/pricer/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/nktkt/pricer/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/nktkt/pricer/compare/v0.5.0...v0.6.0

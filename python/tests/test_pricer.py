@@ -78,6 +78,31 @@ def main():
     assert pricer.cva(ep, cp, disc, 0.4) > 0.0
     approx(pricer.dva(ep, cp, disc, 0.4), 0.0, 1e-12)  # DVA == 0 for a long option
 
+    # Path-dependent exotics: each Monte Carlo engine agrees with its closed form.
+    from pricer import AverageType, BarrierType
+
+    # Asian: geometric MC matches the exact discrete-geometric closed form; n=1 == BS.
+    approx(pricer.geometric_asian_price(OptionType.Call, S, K, r, sigma, T, 1), call, 1e-9)
+    geo = pricer.geometric_asian_price(OptionType.Call, S, K, r, sigma, T, 50)
+    geo_mc = pricer.asian_price_mc(OptionType.Call, AverageType.Geometric, S, K, r, sigma, T,
+                                   n_steps=50, n_paths=300_000)
+    approx(geo_mc, geo, 0.05)
+
+    # Barrier: knock-in + knock-out == vanilla, and MC (BGK-corrected) matches the analytic.
+    ui = pricer.barrier_price(OptionType.Call, BarrierType.UpIn, S, K, 130.0, r, sigma, T)
+    uo = pricer.barrier_price(OptionType.Call, BarrierType.UpOut, S, K, 130.0, r, sigma, T)
+    approx(ui + uo, call, 1e-9)
+    uo_mc = pricer.barrier_price_mc(OptionType.Call, BarrierType.UpOut, S, K, 130.0, r, sigma, T,
+                                    n_steps=250, n_paths=400_000)
+    approx(uo_mc, uo, 0.15)
+
+    # Lookback (floating strike): MC matches the closed form and dominates the vanilla call.
+    lb = pricer.lookback_floating_price(OptionType.Call, S, r, sigma, T)
+    lb_mc = pricer.lookback_floating_price_mc(OptionType.Call, S, r, sigma, T,
+                                              n_steps=250, n_paths=400_000)
+    approx(lb_mc, lb, 0.30)
+    assert lb > call, "a floating-strike lookback call dominates the vanilla call"
+
     print("all python tests passed; pricer", pricer.__version__)
 
 

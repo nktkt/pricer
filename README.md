@@ -1,9 +1,10 @@
 # pricer
 
-A header-only C++17 quant library: Black–Scholes and Monte Carlo pricing, model
-calibration (SVI, Heston, Dupire) and exact Greeks by automatic differentiation,
-counterparty risk (xVA), and a **runtime payoff compiler built on LLVM JIT** —
-scaled across SIMD lanes, CPU cores and processes.
+A header-only C++17 quant library: Black–Scholes, Monte Carlo, American
+(early-exercise) and path-dependent exotics (Asian / barrier / lookback) pricing,
+model calibration (SVI, Heston, Dupire) and exact Greeks by automatic
+differentiation, counterparty risk (xVA), and a **runtime payoff compiler built
+on LLVM JIT** — scaled across SIMD lanes, CPU cores and processes.
 
 Every header is small and heavily commented, with a runnable example and a test
 for each topic. Together they walk from the basics of pricing to the kind of
@@ -24,6 +25,7 @@ include/pricer/   header-only core library
   black_scholes.hpp      closed-form pricing + Greeks (continuous dividend yield q)
   monte_carlo.hpp        generic terminal-value MC engine
   american.hpp           American options: CRR binomial tree + Longstaff–Schwartz LSM
+  exotics.hpp            path-dependent exotics: Asian / barrier / lookback (closed form + MC w/ BGK)
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)
   rng.hpp                counter-based RNG (stateless) for parallel/SIMD path generation
   simd.hpp               portable SIMD layer (GCC/Clang vector ext; vectorized exp/log/sqrt + inv-normal CDF)
@@ -67,6 +69,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `greeks` | Risk sensitivities (Greeks) | Closed-form vs. finite-difference cross-check |
 | `barrier_option` | Path-dependent product | Up-and-out barrier call via stepped MC |
 | `american_option` | Early-exercise options | American put: CRR binomial tree vs. Longstaff–Schwartz LSM; early-exercise premium |
+| `exotic_options` | Path-dependent exotics | Asian / barrier / lookback: each closed form vs. Monte Carlo (BGK-corrected) agree |
 | `payoff_interpret` | Payoff DSL without LLVM | Parse a formula → typed AST → tree-walking interpreter |
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
 | `path_dependent` | Exotics from formulas | Asian / barrier / lookback / digital, each a one-line formula |

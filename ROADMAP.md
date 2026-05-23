@@ -69,6 +69,13 @@ Make the JIT compiler the real core.
 - [x] Compiled-kernel cache keyed by formula hash
 - **Exit criteria:** barrier/asian/basket payoffs expressed in the DSL match
   hand-written C++ to floating-point tolerance.
+      *(`exotics.hpp` adds dedicated Asian / barrier / lookback pricers — each a
+      closed form cross-checked against a Monte Carlo engine: an exact
+      discrete-geometric Asian formula, the Reiner–Rubinstein barrier formulas
+      (in+out = vanilla parity), and the Conze–Viswanathan floating-strike
+      lookback; the barrier/lookback MC uses the Broadie–Glasserman–Kou
+      continuity correction to converge to the continuous price. These are the
+      analytic references the DSL payoffs are validated against.)*
 
 ### Phase 3 — Performance & scale-up (6–9 months)
 Single-node speed.

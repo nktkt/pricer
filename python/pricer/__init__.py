@@ -46,6 +46,8 @@ from ._pricer import (  # noqa: F401
     sabr_black_price,
     calibrate_sabr,
     sabr_price_mc,
+    equally_spaced_dates,
+    bermudan_lsm,
     __version__,
 )
 
@@ -88,5 +90,7 @@ __all__ = [
     "sabr_black_price",
     "calibrate_sabr",
     "sabr_price_mc",
+    "equally_spaced_dates",
+    "bermudan_lsm",
     "__version__",
 ]

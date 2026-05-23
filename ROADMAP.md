@@ -75,7 +75,10 @@ Make the JIT compiler the real core.
       (in+out = vanilla parity), and the Conze–Viswanathan floating-strike
       lookback; the barrier/lookback MC uses the Broadie–Glasserman–Kou
       continuity correction to converge to the continuous price. These are the
-      analytic references the DSL payoffs are validated against.)*
+      analytic references the DSL payoffs are validated against. Early-exercise
+      coverage: `american.hpp` (CRR binomial tree + Longstaff–Schwartz LSM) and
+      `bermudan.hpp` (LSM over any finite exercise schedule — one date reproduces
+      the European price, many approach the American one).)*
 
 ### Phase 3 — Performance & scale-up (6–9 months)
 Single-node speed.

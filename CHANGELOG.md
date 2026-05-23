@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.11.0] — 2026-05-23
+
+### Added
+- **Bermudan option pricing** (`bermudan.hpp`): `bermudan_lsm` prices an option
+  exercisable on a finite, possibly irregular, schedule of dates by
+  Longstaff–Schwartz least-squares Monte Carlo. It reuses the LSM regression
+  ({1, S/K, (S/K)²} over the in-the-money paths) from `american.hpp` but over an
+  arbitrary schedule, jumping the underlying exactly from one exercise date to the
+  next (GBM is Markov, so no fine time grid is needed). A Bermudan sits between the
+  European and American values: one exercise date reproduces the European price,
+  many equally-spaced dates approach the American (binomial) price, and adding
+  dates only raises the value — all cross-checked in `test_bermudan` and shown in
+  `examples/bermudan_option.cpp`. A helper `equally_spaced_dates` builds the common
+  uniform schedule, and the dividend yield `q` is supported. Exposed through the
+  Python bindings (`bermudan_lsm`, `equally_spaced_dates`).
+
 ## [0.10.0] — 2026-05-23
 
 ### Added
@@ -193,7 +209,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/nktkt/pricer/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/nktkt/pricer/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/nktkt/pricer/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/nktkt/pricer/compare/v0.7.0...v0.8.0

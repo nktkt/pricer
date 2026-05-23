@@ -122,6 +122,19 @@ def main():
     approx(pricer.sabr_price_mc(OptionType.Call, F, 100.0, Tf, 1.0, truth, n_paths=400_000),
            sc, 0.25)
 
+    # Bermudan: one date == European; many dates approach the American value.
+    eur_put = pricer.black_scholes_put(S, K, r, sigma, T)
+    b1 = pricer.bermudan_lsm(OptionType.Put, S, K, r, sigma, pricer.equally_spaced_dates(T, 1),
+                             n_paths=200_000)
+    approx(b1, eur_put, 0.06)
+    b50 = pricer.bermudan_lsm(OptionType.Put, S, K, r, sigma, pricer.equally_spaced_dates(T, 50),
+                              n_paths=200_000)
+    assert b50 > eur_put, "a Bermudan put with many dates is worth more than the European"
+    # An irregular schedule is accepted too.
+    b_irr = pricer.bermudan_lsm(OptionType.Put, S, K, r, sigma, [0.25, 0.5, 0.75, 1.0],
+                                n_paths=200_000)
+    assert eur_put < b_irr < b50 + 0.1
+
     print("all python tests passed; pricer", pricer.__version__)
 
 

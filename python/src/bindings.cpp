@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "pricer/bermudan.hpp"
 #include "pricer/black_scholes.hpp"
 #include "pricer/curve.hpp"
 #include "pricer/exotics.hpp"
@@ -38,7 +39,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.10.0";
+    m.attr("__version__") = "0.11.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
@@ -232,6 +233,12 @@ PYBIND11_MODULE(_pricer, m) {
     m.def("sabr_price_mc", &sabr_price_mc, py::arg("type"), py::arg("F"), py::arg("K"), py::arg("T"),
           py::arg("df"), py::arg("params"), py::arg("n_steps") = 200, py::arg("n_paths") = 500000,
           py::arg("seed") = 12345, py::call_guard<py::gil_scoped_release>());
+
+    // --- Bermudan options (Longstaff–Schwartz LSM over a finite exercise schedule) ---
+    m.def("equally_spaced_dates", &equally_spaced_dates, py::arg("T"), py::arg("m"));
+    m.def("bermudan_lsm", &bermudan_lsm, py::arg("type"), py::arg("S"), py::arg("K"), py::arg("r"),
+          py::arg("sigma"), py::arg("exercise_times"), py::arg("n_paths") = 200000,
+          py::arg("seed") = 12345, py::arg("q") = 0.0, py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

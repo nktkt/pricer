@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-05-23
+
+### Added
+- **Rainbow (two-asset best-of / worst-of) options** (`rainbow.hpp`): options on
+  the maximum or minimum of two correlated underlyings, with the Stulz (1982)
+  closed form cross-checked against a Monte Carlo engine.
+  - **Bivariate normal CDF** (`bivariate_normal_cdf`): the standard bivariate
+    normal `M(a, b; ρ)` via Drezner's (1978) reduction to a 2-D Gauss quadrature,
+    checked against its analytic special cases.
+  - **Stulz closed form** (`rainbow_price`, with the `RainbowType` `Max` / `Min`
+    selector): exact best-of (max) and worst-of (min) call formulas; the puts come
+    from put–call parity using the discounted forward on the max/min (a vanilla
+    leg plus/minus a Margrabe exchange option). Anchored by the **validating
+    parity** that pins both call formulas at once — a call on the max plus a call
+    on the min equals two vanilla calls (`C_max(K) + C_min(K) = c(S1, K) +
+    c(S2, K)`) — with best-of dominating either single call, worst-of dominated by
+    it, and the expected correlation effects (best-of falls / worst-of rises with
+    correlation).
+  - **Monte Carlo** (`rainbow_price_mc`): a correlated two-asset GBM engine that
+    cross-checks the closed form for call/put on max/min.
+  - Exposed through the Python bindings (`RainbowType`, `bivariate_normal_cdf`,
+    `rainbow_price`, `rainbow_price_mc`); all carry the continuous dividend yields
+    `q1` / `q2`. Covered by `test_rainbow` and demonstrated in
+    `examples/rainbow_options.cpp`.
+
 ## [0.13.0] — 2026-05-23
 
 ### Added
@@ -251,7 +276,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/nktkt/pricer/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/nktkt/pricer/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/nktkt/pricer/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/nktkt/pricer/compare/v0.10.0...v0.11.0

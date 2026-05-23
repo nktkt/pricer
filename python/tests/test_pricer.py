@@ -163,6 +163,19 @@ def main():
     approx(pricer.digital_price_mc(OptionType.Call, DT.CashOrNothing, S, K, r, sigma, T,
                                    n_paths=2_000_000), cash_c, 0.01)
 
+    # Rainbow (two-asset best-of/worst-of): the parity pinning the Stulz formulas, MC cross-check.
+    from pricer import RainbowType as RT
+    import math
+    approx(pricer.bivariate_normal_cdf(0.0, 0.0, 0.5), 1.0 / 3.0, 1e-6)
+    S1b, S2b = 100.0, 95.0
+    cmax = pricer.rainbow_price(OptionType.Call, RT.Max, S1b, S2b, K, r, 0.20, 0.30, 0.4, T)
+    cmin = pricer.rainbow_price(OptionType.Call, RT.Min, S1b, S2b, K, r, 0.20, 0.30, 0.4, T)
+    c1 = pricer.black_scholes_call(S1b, K, r, 0.20, T)
+    c2 = pricer.black_scholes_call(S2b, K, r, 0.30, T)
+    approx(cmax + cmin, c1 + c2, 1e-9)  # call-on-max + call-on-min == two vanilla calls
+    approx(pricer.rainbow_price_mc(OptionType.Call, RT.Max, S1b, S2b, K, r, 0.20, 0.30, 0.4, T,
+                                   n_paths=800_000), cmax, 0.15)
+
     print("all python tests passed; pricer", pricer.__version__)
 
 

@@ -2,7 +2,7 @@
 
 A header-only C++17 quant library: Black–Scholes, Monte Carlo, American /
 Bermudan (early-exercise), path-dependent exotics (Asian / barrier / lookback / digital)
-and multi-asset baskets / spreads pricing, model calibration (SVI, SABR, Heston,
+and multi-asset baskets / spreads / rainbows pricing, model calibration (SVI, SABR, Heston,
 Dupire) and exact Greeks by
 automatic differentiation, counterparty risk (xVA), and a **runtime payoff
 compiler built on LLVM JIT** — scaled across SIMD lanes, CPU cores and processes.
@@ -29,6 +29,7 @@ include/pricer/   header-only core library
   bermudan.hpp           Bermudan options: LSM over a finite (any) exercise schedule
   basket.hpp             multi-asset options: basket (correlated GBM) + spread / exchange (Margrabe, Kirk)
   digital.hpp            digital (binary) options: cash-or-nothing / asset-or-nothing (closed form + MC)
+  rainbow.hpp            rainbow (best-of / worst-of) two-asset options + bivariate normal CDF (Stulz)
   exotics.hpp            path-dependent exotics: Asian / barrier / lookback (closed form + MC w/ BGK)
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)
   rng.hpp                counter-based RNG (stateless) for parallel/SIMD path generation
@@ -77,6 +78,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `bermudan_option` | Finite exercise schedule | Bermudan put climbs from the European to the American value as exercise dates fill in |
 | `basket_options` | Multi-asset (correlated GBM) | Basket and spread/exchange options: geometric closed form, Margrabe & Kirk vs. Monte Carlo |
 | `digital_options` | Binary options | Cash-/asset-or-nothing closed form vs. MC; the exact vanilla decomposition |
+| `rainbow_options` | Two-asset best-of/worst-of | Stulz closed form for max/min options vs. MC; the call-max + call-min = two-vanillas parity |
 | `exotic_options` | Path-dependent exotics | Asian / barrier / lookback: each closed form vs. Monte Carlo (BGK-corrected) agree |
 | `payoff_interpret` | Payoff DSL without LLVM | Parse a formula → typed AST → tree-walking interpreter |
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |

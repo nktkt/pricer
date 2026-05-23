@@ -12,6 +12,7 @@ from ._pricer import (  # noqa: F401
     AverageType,
     BarrierType,
     DigitalType,
+    RainbowType,
     Greeks,
     RiskMeasures,
     Position,
@@ -56,6 +57,9 @@ from ._pricer import (  # noqa: F401
     spread_price_mc,
     digital_price,
     digital_price_mc,
+    bivariate_normal_cdf,
+    rainbow_price,
+    rainbow_price_mc,
     __version__,
 )
 
@@ -64,6 +68,7 @@ __all__ = [
     "AverageType",
     "BarrierType",
     "DigitalType",
+    "RainbowType",
     "Greeks",
     "RiskMeasures",
     "Position",
@@ -108,5 +113,8 @@ __all__ = [
     "spread_price_mc",
     "digital_price",
     "digital_price_mc",
+    "bivariate_normal_cdf",
+    "rainbow_price",
+    "rainbow_price_mc",
     "__version__",
 ]

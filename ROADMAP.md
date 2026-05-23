@@ -84,7 +84,9 @@ Make the JIT compiler the real core.
       arithmetic-basket / spread Monte Carlo (Kirk's approximation for non-zero
       spread strikes). `digital.hpp` adds cash-or-nothing / asset-or-nothing
       binary options, validated by the exact vanilla decomposition (call =
-      asset-or-nothing − K·cash-or-nothing).)*
+      asset-or-nothing − K·cash-or-nothing). `rainbow.hpp` adds two-asset
+      best-of/worst-of options via the Stulz closed form (and a bivariate normal
+      CDF), pinned by the call-on-max + call-on-min = two-vanillas parity.)*
 
 ### Phase 3 — Performance & scale-up (6–9 months)
 Single-node speed.

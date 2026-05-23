@@ -24,6 +24,7 @@
 #include "pricer/parallel_simd.hpp"
 #include "pricer/portfolio.hpp"
 #include "pricer/qmc.hpp"
+#include "pricer/rainbow.hpp"
 #include "pricer/risk.hpp"
 #include "pricer/sabr.hpp"
 #include "pricer/simd_mc.hpp"
@@ -41,7 +42,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.13.0";
+    m.attr("__version__") = "0.14.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
@@ -60,6 +61,10 @@ PYBIND11_MODULE(_pricer, m) {
     py::enum_<DigitalType>(m, "DigitalType")
         .value("CashOrNothing", DigitalType::CashOrNothing)
         .value("AssetOrNothing", DigitalType::AssetOrNothing);
+
+    py::enum_<RainbowType>(m, "RainbowType")
+        .value("Max", RainbowType::Max)
+        .value("Min", RainbowType::Min);
 
     py::class_<Greeks>(m, "Greeks")
         .def_readonly("price", &Greeks::price)
@@ -273,6 +278,16 @@ PYBIND11_MODULE(_pricer, m) {
           py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("n_paths") = 500000,
           py::arg("seed") = 12345, py::arg("cash") = 1.0, py::arg("q") = 0.0,
           py::call_guard<py::gil_scoped_release>());
+
+    // --- rainbow (two-asset best-of / worst-of) options + bivariate normal CDF ---
+    m.def("bivariate_normal_cdf", &bivariate_normal_cdf, py::arg("a"), py::arg("b"), py::arg("rho"));
+    m.def("rainbow_price", &rainbow_price, py::arg("type"), py::arg("which"), py::arg("S1"),
+          py::arg("S2"), py::arg("K"), py::arg("r"), py::arg("sigma1"), py::arg("sigma2"),
+          py::arg("rho"), py::arg("T"), py::arg("q1") = 0.0, py::arg("q2") = 0.0);
+    m.def("rainbow_price_mc", &rainbow_price_mc, py::arg("type"), py::arg("which"), py::arg("S1"),
+          py::arg("S2"), py::arg("K"), py::arg("r"), py::arg("sigma1"), py::arg("sigma2"),
+          py::arg("rho"), py::arg("T"), py::arg("n_paths") = 500000, py::arg("seed") = 12345,
+          py::arg("q1") = 0.0, py::arg("q2") = 0.0, py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-23
+
 ### Added
 - **Kubernetes manifests** (`k8s/`): Deployment, Service and a CPU
   HorizontalPodAutoscaler for the REST service — non-root pods, read-only root
@@ -120,7 +122,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/nktkt/pricer/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nktkt/pricer/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nktkt/pricer/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/nktkt/pricer/compare/v0.2.0...v0.3.0

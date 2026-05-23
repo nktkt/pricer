@@ -40,13 +40,14 @@ inline BookGreeks book_greeks_aad(const std::vector<Position>& book) {
     sigv.reserve(book.size());
 
     Var value = make_var(tape, 0.0);
+    const Var zero = make_var(tape, 0.0);  // no dividend yield for the book's vanillas
     for (const Position& p : book) {
         const Var S = make_var(tape, p.S);
         const Var K = make_var(tape, p.K);
         const Var r = make_var(tape, p.r);
         const Var sg = make_var(tape, p.sigma);
         const Var T = make_var(tape, p.T);
-        value = value + p.qty * bs_price_ad<Var>(p.type, S, K, r, sg, T);
+        value = value + p.qty * bs_price_ad<Var>(p.type, S, K, r, sg, T, zero);
         Sv.push_back(S);
         sigv.push_back(sg);
     }

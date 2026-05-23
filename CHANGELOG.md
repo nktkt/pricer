@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Continuous dividend yield (`q`)** (Merton extension) across the closed-form
+  pricer and Greeks (closed-form, forward-AD and adjoint-AD), implied vol, the
+  American binomial tree / LSM, and the Python and REST surfaces — backward
+  compatible (`q` defaults to 0). Verified by dividend-adjusted put–call parity
+  and the early-exercise premium an American call gains when `q` is high
+  (`test_dividends`).
 - **American option Greeks** (`american.hpp` `binomial_greeks`): delta, gamma and
   theta read from a single CRR tree pass (finite differences over adjacent
   lattice nodes), with vega and rho by central-difference re-pricing. The European

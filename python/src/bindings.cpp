@@ -108,16 +108,16 @@ PYBIND11_MODULE(_pricer, m) {
 
     // --- closed form ---
     m.def("black_scholes_price", &black_scholes_price, py::arg("type"), py::arg("S"),
-          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"));
+          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("q") = 0.0);
     m.def("black_scholes_call", &black_scholes_call, py::arg("S"), py::arg("K"), py::arg("r"),
-          py::arg("sigma"), py::arg("T"));
+          py::arg("sigma"), py::arg("T"), py::arg("q") = 0.0);
     m.def("black_scholes_put", &black_scholes_put, py::arg("S"), py::arg("K"), py::arg("r"),
-          py::arg("sigma"), py::arg("T"));
+          py::arg("sigma"), py::arg("T"), py::arg("q") = 0.0);
     m.def("black_scholes_greeks", &black_scholes_greeks, py::arg("type"), py::arg("S"),
-          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"));
+          py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("q") = 0.0);
     m.def("implied_vol", &implied_vol, py::arg("type"), py::arg("price"), py::arg("S"),
           py::arg("K"), py::arg("r"), py::arg("T"), py::arg("tol") = 1e-8,
-          py::arg("max_iter") = 100);
+          py::arg("max_iter") = 100, py::arg("q") = 0.0);
 
     // --- Monte Carlo (vanilla call/put) ---
     m.def("mc_price",

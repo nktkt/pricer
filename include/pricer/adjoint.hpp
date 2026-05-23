@@ -80,11 +80,11 @@ inline Var erfc(const Var& a) {
 // Greeks via reverse-mode AAD: delta/vega/rho/theta from one backward sweep.
 // (Gamma, a second derivative, is supplied by forward-mode AD.)
 inline Greeks black_scholes_greeks_aad(OptionType type, double S, double K, double r, double sigma,
-                                       double T) {
+                                       double T, double q = 0.0) {
     Tape tape;
     const Var Sv = make_var(tape, S), Kv = make_var(tape, K), rv = make_var(tape, r),
-              sigv = make_var(tape, sigma), Tv = make_var(tape, T);
-    const Var price = bs_price_ad<Var>(type, Sv, Kv, rv, sigv, Tv);
+              sigv = make_var(tape, sigma), Tv = make_var(tape, T), qv = make_var(tape, q);
+    const Var price = bs_price_ad<Var>(type, Sv, Kv, rv, sigv, Tv, qv);
     const std::vector<double> adj = tape.grad(price.idx);
 
     Greeks g{};
@@ -93,7 +93,7 @@ inline Greeks black_scholes_greeks_aad(OptionType type, double S, double K, doub
     g.vega = adj[sigv.idx];
     g.rho = adj[rv.idx];
     g.theta = -adj[Tv.idx];  // time decay
-    g.gamma = black_scholes_greeks_ad(type, S, K, r, sigma, T).gamma;  // 2nd order via forward AD
+    g.gamma = black_scholes_greeks_ad(type, S, K, r, sigma, T, q).gamma;  // 2nd order via forward AD
     return g;
 }
 

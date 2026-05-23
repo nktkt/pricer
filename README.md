@@ -21,7 +21,7 @@ laptop or across a cluster. See [`ROADMAP.md`](ROADMAP.md) for the long-range pl
 ```
 include/pricer/   header-only core library
   normal.hpp             standard-normal pdf / cdf
-  black_scholes.hpp      closed-form pricing + Greeks
+  black_scholes.hpp      closed-form pricing + Greeks (continuous dividend yield q)
   monte_carlo.hpp        generic terminal-value MC engine
   american.hpp           American options: CRR binomial tree + Longstaff–Schwartz LSM
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)

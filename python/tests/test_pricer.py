@@ -31,6 +31,14 @@ def main():
     iv = pricer.implied_vol(OptionType.Call, call, S, K, r, T)
     approx(iv, sigma, 1e-5)
 
+    # Continuous dividend yield q: dividend-adjusted put-call parity, and q lowers the call.
+    e = 2.718281828459045
+    cq = pricer.black_scholes_call(S, K, r, sigma, T, q=0.03)
+    pq = pricer.black_scholes_put(S, K, r, sigma, T, q=0.03)
+    approx(cq - pq, S * e ** (-0.03 * T) - K * e ** (-r * T), 1e-6)
+    assert cq < call, "a dividend yield should lower the call value"
+    approx(pricer.implied_vol(OptionType.Call, cq, S, K, r, T, q=0.03), sigma, 1e-5)
+
     # Monte Carlo (serial, parallel, quasi, SIMD, multicore+SIMD)
     approx(pricer.mc_price(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000), call, 0.05)
     approx(pricer.mc_price_parallel(OptionType.Call, S, K, r, sigma, T, n_paths=2_000_000, threads=4),

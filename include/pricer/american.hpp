@@ -31,13 +31,13 @@ inline double vanilla_payoff(OptionType type, double S, double K) {
 // (a backward induction with no early exercise), which converges to Black–Scholes
 // as `steps` grows; `american=true` adds the early-exercise test at each node.
 inline double binomial_price(OptionType type, double S, double K, double r, double sigma, double T,
-                             int steps, bool american) {
+                             int steps, bool american, double q = 0.0) {
     if (steps < 1) steps = 1;
     const double dt = T / steps;
     const double u = std::exp(sigma * std::sqrt(dt));
     const double d = 1.0 / u;
     const double disc = std::exp(-r * dt);
-    const double p = (std::exp(r * dt) - d) / (u - d);  // risk-neutral up-probability
+    const double p = (std::exp((r - q) * dt) - d) / (u - d);  // up-prob with carry r - q
 
     // Terminal layer: payoff at each of the steps+1 final nodes (i = #down moves).
     std::vector<double> v(static_cast<std::size_t>(steps) + 1);
@@ -65,13 +65,13 @@ inline double binomial_price(OptionType type, double S, double K, double r, doub
 // 2·dt). Vega and rho — sensitivities to model inputs, not lattice coordinates —
 // are central differences from re-pricing. Works for European and American.
 inline Greeks binomial_greeks(OptionType type, double S, double K, double r, double sigma, double T,
-                              int steps, bool american) {
+                              int steps, bool american, double q = 0.0) {
     if (steps < 3) steps = 3;  // need the step-2 layer for gamma/theta
     const double dt = T / steps;
     const double u = std::exp(sigma * std::sqrt(dt));
     const double d = 1.0 / u;
     const double disc = std::exp(-r * dt);
-    const double p = (std::exp(r * dt) - d) / (u - d);
+    const double p = (std::exp((r - q) * dt) - d) / (u - d);
 
     std::vector<double> v(static_cast<std::size_t>(steps) + 1);
     for (int i = 0; i <= steps; ++i)
@@ -101,10 +101,10 @@ inline Greeks binomial_greeks(OptionType type, double S, double K, double r, dou
 
     // Vega (per 1.0 of vol) and rho (per 1.0 of rate) by central differences.
     const double hs = 0.01, hr = 1e-4;
-    g.vega = (binomial_price(type, S, K, r, sigma + hs, T, steps, american) -
-              binomial_price(type, S, K, r, sigma - hs, T, steps, american)) / (2.0 * hs);
-    g.rho = (binomial_price(type, S, K, r + hr, sigma, T, steps, american) -
-             binomial_price(type, S, K, r - hr, sigma, T, steps, american)) / (2.0 * hr);
+    g.vega = (binomial_price(type, S, K, r, sigma + hs, T, steps, american, q) -
+              binomial_price(type, S, K, r, sigma - hs, T, steps, american, q)) / (2.0 * hs);
+    g.rho = (binomial_price(type, S, K, r + hr, sigma, T, steps, american, q) -
+             binomial_price(type, S, K, r - hr, sigma, T, steps, american, q)) / (2.0 * hr);
     return g;
 }
 
@@ -144,11 +144,11 @@ inline bool solve3x3(double A[3][3], double b[3], double x[3]) {
 // (x = S/K, normalized for conditioning) over the in-the-money paths, exercising
 // where the immediate payoff exceeds the estimate. Reproducible for a given seed.
 inline double lsm_american(OptionType type, double S, double K, double r, double sigma, double T,
-                           long n_paths, int n_steps, std::uint64_t seed = 12345) {
+                           long n_paths, int n_steps, std::uint64_t seed = 12345, double q = 0.0) {
     if (n_steps < 1) n_steps = 1;
     if (n_paths < 1) n_paths = 1;
     const double dt = T / n_steps;
-    const double drift = (r - 0.5 * sigma * sigma) * dt;
+    const double drift = (r - q - 0.5 * sigma * sigma) * dt;
     const double vol = sigma * std::sqrt(dt);
     const double disc = std::exp(-r * dt);  // one-step discount factor
 

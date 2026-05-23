@@ -89,7 +89,7 @@ All under `include/pricer/`:
 | Layer | Headers | Notes |
 |-------|---------|-------|
 | Math primitives | `normal.hpp` | standard-normal pdf/cdf |
-| Closed-form pricing | `black_scholes.hpp` | price + Greeks struct |
+| Closed-form pricing | `black_scholes.hpp` | price + Greeks (Merton continuous dividend yield q) |
 | Monte Carlo | `monte_carlo.hpp` | generic terminal-value engine, templated on payoff |
 | Early exercise | `american.hpp` | American options: CRR binomial tree + Longstaff–Schwartz LSM |
 | Variance reduction | `variance_reduction.hpp`, `qmc.hpp` | antithetic / control variate; Sobol-style QMC + inverse-normal CDF |

@@ -106,7 +106,8 @@ static void log_request(const std::string& path, int code, double us, std::size_
 // --- route handlers (return a JSON body) ---
 static std::string h_price(const Params& p) {
     const Greeks g = black_scholes_greeks(opt_type(p), num(p, "S", 100), num(p, "K", 100),
-                                          num(p, "r", 0.05), num(p, "sigma", 0.2), num(p, "T", 1));
+                                          num(p, "r", 0.05), num(p, "sigma", 0.2), num(p, "T", 1),
+                                          num(p, "q", 0.0));
     char buf[512];
     std::snprintf(buf, sizeof buf,
                   "{\"price\":%.8f,\"delta\":%.8f,\"gamma\":%.8f,\"vega\":%.8f,"
@@ -116,7 +117,7 @@ static std::string h_price(const Params& p) {
 }
 static std::string h_impliedvol(const Params& p) {
     const double iv = implied_vol(opt_type(p), num(p, "price"), num(p, "S", 100), num(p, "K", 100),
-                                  num(p, "r", 0.05), num(p, "T", 1));
+                                  num(p, "r", 0.05), num(p, "T", 1), 1e-8, 100, num(p, "q", 0.0));
     char buf[128];
     std::snprintf(buf, sizeof buf, "{\"implied_vol\":%.8f}", iv);
     return buf;

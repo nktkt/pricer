@@ -21,6 +21,13 @@ add_library(pricer_warnings INTERFACE)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(pricer_warnings INTERFACE -Wall -Wextra -Werror)
 endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # The 256-bit SIMD vector types (simd.hpp) trip GCC's -Wpsabi note about the
+  # GCC-4.6 ABI change for >16-byte vectors passed by value. Those types are
+  # always inlined and never cross a real ABI boundary here, so the note is
+  # spurious; silence it (it would otherwise be fatal under -Werror).
+  target_compile_options(pricer_warnings INTERFACE -Wno-psabi)
+endif()
 
 option(PRICER_BUILD_EXAMPLES "Build example programs" ON)
 option(PRICER_BUILD_TESTS "Build tests" ON)

@@ -256,6 +256,10 @@ docker compose up --build
 A CI job builds the image and checks the container serves `/health`, `/price`
 and `/metrics`.
 
+For Kubernetes, [`k8s/`](k8s/) has Deployment, Service and HorizontalPodAutoscaler
+manifests (`kubectl apply -f k8s/`) — non-root pods, `/health` probes, CPU
+autoscaling, and Prometheus scrape annotations. See [`k8s/README.md`](k8s/README.md).
+
 ## Python
 
 The core is exposed to Python via pybind11 — price a book without touching C++:

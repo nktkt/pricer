@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Kubernetes manifests** (`k8s/`): Deployment, Service and a CPU
+  HorizontalPodAutoscaler for the REST service — non-root pods, read-only root
+  filesystem, `/health` probes, and Prometheus scrape annotations for `/metrics`
+  — with a `k8s/README.md`.
 - **Project docs**: `ARCHITECTURE.md` (how the layers, the one-AST/two-backend
   DSL, the determinism model and the surfaces fit together) and `CONTRIBUTING.md`
   (build/test, conventions, adding a feature, and the release process), linked

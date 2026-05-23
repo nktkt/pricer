@@ -1,0 +1,17 @@
+# ClusterIP service fronting the pricer-server pods. Reach it from inside the
+# cluster at http://pricer-server/ , or `kubectl port-forward` it locally.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pricer-server
+  labels:
+    app: pricer-server
+spec:
+  type: ClusterIP
+  selector:
+    app: pricer-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: http   # the container's 8080 port (named "http")
+      protocol: TCP

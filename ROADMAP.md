@@ -117,7 +117,7 @@ Beyond one machine.
 - [ ] Observability: metrics, tracing, cost/perf dashboards
       *(REST server exposes Prometheus `/metrics` — request/latency/job/uptime counters — plus a structured JSON access log; distributed tracing and dashboards pending)*
 - [ ] Cloud-native deployment (containers, autoscaling)
-      *(multi-stage `Dockerfile` + `docker-compose.yml` ship the REST service as a slim non-root container, built and endpoint-checked by a `docker` CI job; orchestration/autoscaling pending)*
+      *(multi-stage `Dockerfile` + `docker-compose.yml` ship the REST service as a slim non-root container, built and endpoint-checked by a `docker` CI job; `k8s/` adds Deployment + Service + CPU HorizontalPodAutoscaler manifests; production orchestration/GitOps still pending)*
 - **Exit criteria:** linear scaling of a large MC job across N nodes with
   reproducible results.
 

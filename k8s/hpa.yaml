@@ -1,0 +1,21 @@
+# Horizontal Pod Autoscaler: scale the deployment on CPU load (Monte Carlo
+# pricing is CPU-bound). Requires metrics-server in the cluster, and the
+# Deployment must set a CPU request (it does).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pricer-server
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pricer-server
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

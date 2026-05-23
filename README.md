@@ -23,6 +23,7 @@ include/pricer/   header-only core library
   normal.hpp             standard-normal pdf / cdf
   black_scholes.hpp      closed-form pricing + Greeks
   monte_carlo.hpp        generic terminal-value MC engine
+  american.hpp           American options: CRR binomial tree + Longstaff–Schwartz LSM
   parallel.hpp           deterministic multithreaded MC (result independent of thread count)
   rng.hpp                counter-based RNG (stateless) for parallel/SIMD path generation
   simd.hpp               portable SIMD layer (GCC/Clang vector ext; vectorized exp/log/sqrt + inv-normal CDF)
@@ -65,6 +66,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `benchmark` | MC throughput harness | ~275 Mpaths/s; baseline for tracking optimizations |
 | `greeks` | Risk sensitivities (Greeks) | Closed-form vs. finite-difference cross-check |
 | `barrier_option` | Path-dependent product | Up-and-out barrier call via stepped MC |
+| `american_option` | Early-exercise options | American put: CRR binomial tree vs. Longstaff–Schwartz LSM; early-exercise premium |
 | `payoff_interpret` | Payoff DSL without LLVM | Parse a formula → typed AST → tree-walking interpreter |
 | `jit_payoff` | **LLVM JIT** payoff compiler | Parses a formula string → LLVM IR → native code at runtime |
 | `path_dependent` | Exotics from formulas | Asian / barrier / lookback / digital, each a one-line formula |

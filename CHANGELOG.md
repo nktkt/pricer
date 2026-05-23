@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **American (early-exercise) option pricing** (`american.hpp`): a Cox–Ross–Rubinstein
+  binomial tree and Longstaff–Schwartz least-squares Monte Carlo, cross-checked
+  against each other and Black–Scholes (`examples/american_option.cpp`,
+  `test_american`). Captures the early-exercise premium an American put carries
+  over its European counterpart.
+
 ## [0.6.0] — 2026-05-23
 
 ### Added

@@ -19,7 +19,8 @@ the [Doxygen reference](https://nktkt.github.io/pricer/).
         │  Payoff DSL:  text → AST ──┬── tree-walking interpreter    │
         │                            └── LLVM IR → JIT (native)      │
         │                                                            │
-        │  Pricing:     Black–Scholes · Monte Carlo · Heston         │
+        │  Pricing:     Black–Scholes · Monte Carlo · Heston ·       │
+        │               American (binomial / LSM)                    │
         │  Risk:        Greeks (closed-form / AD / AAD) · VaR/ES ·   │
         │               xVA (CVA/DVA) · book-level one-pass Greeks   │
         │  Calibration: curves · vol surface · SVI · Heston · Dupire │
@@ -90,6 +91,7 @@ All under `include/pricer/`:
 | Math primitives | `normal.hpp` | standard-normal pdf/cdf |
 | Closed-form pricing | `black_scholes.hpp` | price + Greeks struct |
 | Monte Carlo | `monte_carlo.hpp` | generic terminal-value engine, templated on payoff |
+| Early exercise | `american.hpp` | American options: CRR binomial tree + Longstaff–Schwartz LSM |
 | Variance reduction | `variance_reduction.hpp`, `qmc.hpp` | antithetic / control variate; Sobol-style QMC + inverse-normal CDF |
 | RNG & scaling | `rng.hpp`, `parallel.hpp`, `simd.hpp`, `simd_mc.hpp`, `parallel_simd.hpp`, `distributed.hpp` | counter-based RNG; deterministic thread pool; portable SIMD layer + vectorized MC; multicore×SIMD; block-sharded distributed MC |
 | Risk | `greeks_mc.hpp`, `risk.hpp`, `xva.hpp` | MC Greeks (bump+CRN / pathwise); VaR/ES; exposure simulation + CVA/DVA/BCVA |

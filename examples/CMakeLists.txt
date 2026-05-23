@@ -4,7 +4,8 @@ find_package(Threads REQUIRED)
 foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benchmark
           variance_reduction mc_greeks risk_demo pricer_cli vol_surface_demo svi_calibration
           heston_calibration ad_greeks distributed_mc aad_greeks local_vol_demo
-          market_data_demo simd_paths scale_benchmark xva_demo portfolio_aad payoff_interpret)
+          market_data_demo simd_paths scale_benchmark xva_demo portfolio_aad american_option
+          payoff_interpret)
   add_executable(${ex} ${ex}.cpp)
   target_link_libraries(${ex} PRIVATE pricer Threads::Threads pricer_warnings)
 endforeach()

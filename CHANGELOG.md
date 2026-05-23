@@ -17,21 +17,18 @@ All notable changes to this project are documented here. The format follows
   regardless of how blocks are sharded, plus a multi-process driver.
 - **Reverse-mode AAD** (`adjoint.hpp`) and forward-mode AD (`dual.hpp`) for exact
   Greeks; **Dupire local volatility** (`local_vol.hpp`).
-- **Calibration**: Levenberg–Marquardt solver, SVI and Heston models, plus a
-  yield curve, implied-vol surface, and quadratic smile fit.
+- **Calibration & vol surface**: Levenberg–Marquardt solver, SVI and Heston
+  models (pricing + calibration), plus a discount curve, implied-vol surface,
+  and quadratic smile fit.
+- **REST pricing service** (`server/`, opt-in `-DPRICER_BUILD_SERVER=ON`): a
+  dependency-free HTTP server (POSIX sockets) with `/price`, `/impliedvol`,
+  `/mc`, and an async Monte Carlo job API (`/submit`, `/job`); a `server` CI job
+  builds it and smoke-tests the endpoints on Linux/macOS.
 - **CSV market-data adapters and result persistence** (`market_data.hpp`).
 
 ### Changed
 - First-party targets now build with `-Wall -Wextra -Werror`; added boundary /
   error-handling tests.
-
-- **REST pricing service** (`server/`, opt-in `-DPRICER_BUILD_SERVER=ON`): a
-  dependency-free HTTP server (POSIX sockets) with `/price`, `/impliedvol`,
-  `/mc`, and an async Monte Carlo job API (`/submit`, `/job`); a `server` CI job
-  builds it and smoke-tests the endpoints on Linux/macOS.
-- Vol-surface/curve/calibration stack: discount curve, implied-vol surface,
-  quadratic & SVI smile calibration, Heston pricing + calibration (Levenberg–
-  Marquardt), and exact Greeks by forward-mode automatic differentiation.
 
 ## [0.1.0] — 2026-05-21
 

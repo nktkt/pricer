@@ -1,7 +1,7 @@
 # Doxygen configuration for the pricer API reference.
 # Only non-default options are set; everything else uses Doxygen defaults.
 PROJECT_NAME           = "pricer"
-PROJECT_NUMBER         = 0.6.0
+PROJECT_NUMBER         = 0.7.0
 PROJECT_BRIEF          = "Option pricing & risk engine (C++/LLVM)"
 OUTPUT_DIRECTORY       = build/docs
 

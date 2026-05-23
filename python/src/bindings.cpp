@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "pricer/bachelier.hpp"
 #include "pricer/basket.hpp"
 #include "pricer/bermudan.hpp"
 #include "pricer/black_scholes.hpp"
@@ -42,7 +43,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.14.0";
+    m.attr("__version__") = "0.15.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
@@ -288,6 +289,18 @@ PYBIND11_MODULE(_pricer, m) {
           py::arg("S2"), py::arg("K"), py::arg("r"), py::arg("sigma1"), py::arg("sigma2"),
           py::arg("rho"), py::arg("T"), py::arg("n_paths") = 500000, py::arg("seed") = 12345,
           py::arg("q1") = 0.0, py::arg("q2") = 0.0, py::call_guard<py::gil_scoped_release>());
+
+    // --- Bachelier (normal) model: handles negative forwards / strikes ---
+    m.def("bachelier_price", &bachelier_price, py::arg("type"), py::arg("F"), py::arg("K"),
+          py::arg("sigma_n"), py::arg("T"), py::arg("df") = 1.0);
+    m.def("bachelier_greeks", &bachelier_greeks, py::arg("type"), py::arg("F"), py::arg("K"),
+          py::arg("sigma_n"), py::arg("T"), py::arg("df") = 1.0);
+    m.def("bachelier_implied_vol", &bachelier_implied_vol, py::arg("type"), py::arg("price"),
+          py::arg("F"), py::arg("K"), py::arg("T"), py::arg("df") = 1.0, py::arg("tol") = 1e-10,
+          py::arg("max_iter") = 100);
+    m.def("bachelier_price_mc", &bachelier_price_mc, py::arg("type"), py::arg("F"), py::arg("K"),
+          py::arg("sigma_n"), py::arg("T"), py::arg("n_paths") = 500000, py::arg("seed") = 12345,
+          py::arg("df") = 1.0, py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

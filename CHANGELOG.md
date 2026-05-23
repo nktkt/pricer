@@ -6,6 +6,32 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-05-23
+
+### Added
+- **Bachelier (normal) model** (`bachelier.hpp`): arithmetic Brownian motion on
+  the forward (`F_T = F + σ_n·√T·Z`), so negative forwards and strikes are fine —
+  the convention for interest-rate options and spreads, where Black–Scholes'
+  lognormal assumption breaks down. The volatility `σ_n` is an absolute "normal"
+  vol and the rate enters only through the discount factor `df`.
+  - **Closed form** (`bachelier_price`): the exact call/put price under the normal
+    model; the ATM price reduces to `df·σ_n·√T·φ(0)` and tends to the discounted
+    intrinsic as `σ_n → 0`.
+  - **Greeks** (`bachelier_greeks`): analytic delta, gamma and vega, with theta the
+    time decay at a fixed `df` (rho is left 0 since the rate enters only via `df`).
+  - **Normal implied vol** (`bachelier_implied_vol`): recovers the absolute (normal)
+    vol from a price by a safeguarded Newton iteration seeded from the exact ATM
+    inversion.
+  - **Monte Carlo** (`bachelier_price_mc`): simulates the arithmetic forward (which
+    can go negative) and cross-checks the closed form.
+  - Anchored by the **validating relationships**: put–call parity
+    (`C − P = df·(F − K)`), the ATM formula, the zero-vol intrinsic limit, a
+    negative-rate floorlet, the Greeks vs. finite differences, an implied-vol
+    round-trip, and the Monte Carlo cross-check.
+  - Exposed through the Python bindings (`bachelier_price`, `bachelier_greeks`,
+    `bachelier_implied_vol`, `bachelier_price_mc`). Covered by `test_bachelier`
+    and demonstrated in `examples/bachelier_demo.cpp`.
+
 ## [0.14.0] — 2026-05-23
 
 ### Added
@@ -276,7 +302,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/nktkt/pricer/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/nktkt/pricer/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/nktkt/pricer/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/nktkt/pricer/compare/v0.11.0...v0.12.0

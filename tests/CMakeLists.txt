@@ -6,7 +6,7 @@ foreach(t test_black_scholes test_greeks test_monte_carlo test_parallel test_var
           test_adjoint test_local_vol test_market_data test_rng test_payoff_ast test_edge_cases
           test_simd test_parallel_simd test_xva test_portfolio test_payoff_fuzz test_american
           test_dividends test_exotics test_sabr test_bermudan test_basket test_digital
-          test_rainbow)
+          test_rainbow test_bachelier)
   add_executable(${t} ${t}.cpp)
   target_link_libraries(${t} PRIVATE pricer Threads::Threads pricer_warnings)
   target_include_directories(${t} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

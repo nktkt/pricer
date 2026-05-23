@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pricer"
-version = "0.14.0"
+version = "0.15.0"
 description = "Option pricing & risk engine with a C++/LLVM core"
 readme = "README.md"
 requires-python = ">=3.9"

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 # C is enabled because LLVM's CMake package runs C-based feature checks.
-project(pricer LANGUAGES C CXX VERSION 0.14.0)
+project(pricer LANGUAGES C CXX VERSION 0.15.0)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)

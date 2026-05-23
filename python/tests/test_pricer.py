@@ -176,6 +176,17 @@ def main():
     approx(pricer.rainbow_price_mc(OptionType.Call, RT.Max, S1b, S2b, K, r, 0.20, 0.30, 0.4, T,
                                    n_paths=800_000), cmax, 0.15)
 
+    # Bachelier (normal) model: put-call parity, implied-vol round-trip, negative-rate floorlet.
+    Fb, sn, dfb = 100.0, 15.0, 0.95
+    bc = pricer.bachelier_price(OptionType.Call, Fb, 105.0, sn, T, dfb)
+    bp = pricer.bachelier_price(OptionType.Put, Fb, 105.0, sn, T, dfb)
+    approx(bc - bp, dfb * (Fb - 105.0), 1e-12)
+    approx(pricer.bachelier_implied_vol(OptionType.Call, bc, Fb, 105.0, T, dfb), sn, 1e-8)
+    floor = pricer.bachelier_price(OptionType.Put, -0.004, 0.0, 0.012, T, 1.0)  # negative-rate floorlet
+    assert floor > 0.0, "negative-rate floorlet must be priceable and positive"
+    approx(pricer.bachelier_price_mc(OptionType.Put, -0.004, 0.0, 0.012, T, n_paths=2_000_000,
+                                     seed=7, df=1.0), floor, 5e-5)
+
     print("all python tests passed; pricer", pricer.__version__)
 
 

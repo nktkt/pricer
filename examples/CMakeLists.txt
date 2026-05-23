@@ -6,7 +6,7 @@ foreach(ex black_scholes_demo convergence parallel_mc greeks barrier_option benc
           heston_calibration ad_greeks distributed_mc aad_greeks local_vol_demo
           market_data_demo simd_paths scale_benchmark xva_demo portfolio_aad american_option
           exotic_options sabr_smile bermudan_option basket_options digital_options rainbow_options
-          payoff_interpret)
+          bachelier_demo payoff_interpret)
   add_executable(${ex} ${ex}.cpp)
   target_link_libraries(${ex} PRIVATE pricer Threads::Threads pricer_warnings)
 endforeach()

@@ -60,6 +60,10 @@ from ._pricer import (  # noqa: F401
     bivariate_normal_cdf,
     rainbow_price,
     rainbow_price_mc,
+    bachelier_price,
+    bachelier_greeks,
+    bachelier_implied_vol,
+    bachelier_price_mc,
     __version__,
 )
 
@@ -116,5 +120,9 @@ __all__ = [
     "bivariate_normal_cdf",
     "rainbow_price",
     "rainbow_price_mc",
+    "bachelier_price",
+    "bachelier_greeks",
+    "bachelier_implied_vol",
+    "bachelier_price_mc",
     "__version__",
 ]

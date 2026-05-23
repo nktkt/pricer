@@ -111,7 +111,9 @@ From price to risk.
       *(LM solver + SVI smile + Heston char-function calibration + Dupire local vol;
       `sabr.hpp` adds the SABR smile model — the Hagan 2002 closed-form implied vol,
       Black-76 pricing, LM calibration of (α,ρ,ν) at fixed β (ATM-seeded so it is
-      scale-robust), and an SDE Monte Carlo cross-check of the asymptotic formula)*
+      scale-robust), and an SDE Monte Carlo cross-check of the asymptotic formula.
+      `bachelier.hpp` adds the Bachelier (normal) model — pricing, Greeks and normal
+      implied vol for negative-rate/spread options)*
 - [x] Portfolio risk: VaR/ES, scenario engine, basic xVA
       *(VaR/ES `risk.hpp`; `xva.hpp` — GBM exposure-simulation scenario engine + CVA/DVA/BCVA against a hazard-rate survival curve)*
 - **Exit criteria:** full Greeks for a multi-asset book in one pass; calibration

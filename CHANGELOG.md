@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-23
+
 ### Added
 - **Payoff DSL typed AST** (`payoff_ast.hpp`): tokenizer + parser + AST +
   tree-walking interpreter (no LLVM); the JIT now walks this shared AST.
@@ -56,5 +58,6 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/nktkt/pricer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/nktkt/pricer/releases/tag/v0.1.0

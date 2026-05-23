@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "pricer/basket.hpp"
 #include "pricer/bermudan.hpp"
 #include "pricer/black_scholes.hpp"
 #include "pricer/curve.hpp"
@@ -39,7 +40,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.11.0";
+    m.attr("__version__") = "0.12.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
@@ -239,6 +240,25 @@ PYBIND11_MODULE(_pricer, m) {
     m.def("bermudan_lsm", &bermudan_lsm, py::arg("type"), py::arg("S"), py::arg("K"), py::arg("r"),
           py::arg("sigma"), py::arg("exercise_times"), py::arg("n_paths") = 200000,
           py::arg("seed") = 12345, py::arg("q") = 0.0, py::call_guard<py::gil_scoped_release>());
+
+    // --- Multi-asset options: basket (correlated GBM) and spread / exchange ---
+    m.def("geometric_basket_price", &geometric_basket_price, py::arg("type"), py::arg("S"),
+          py::arg("w"), py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("corr"), py::arg("T"),
+          py::arg("q") = std::vector<double>{});
+    m.def("basket_price_mc", &basket_price_mc, py::arg("type"), py::arg("avg"), py::arg("S"),
+          py::arg("w"), py::arg("K"), py::arg("r"), py::arg("sigma"), py::arg("corr"), py::arg("T"),
+          py::arg("n_paths") = 500000, py::arg("seed") = 12345,
+          py::arg("q") = std::vector<double>{}, py::call_guard<py::gil_scoped_release>());
+    m.def("margrabe_exchange_price", &margrabe_exchange_price, py::arg("S1"), py::arg("S2"),
+          py::arg("sigma1"), py::arg("sigma2"), py::arg("rho"), py::arg("T"), py::arg("q1") = 0.0,
+          py::arg("q2") = 0.0);
+    m.def("spread_kirk_price", &spread_kirk_price, py::arg("type"), py::arg("S1"), py::arg("S2"),
+          py::arg("K"), py::arg("r"), py::arg("sigma1"), py::arg("sigma2"), py::arg("rho"),
+          py::arg("T"), py::arg("q1") = 0.0, py::arg("q2") = 0.0);
+    m.def("spread_price_mc", &spread_price_mc, py::arg("type"), py::arg("S1"), py::arg("S2"),
+          py::arg("K"), py::arg("r"), py::arg("sigma1"), py::arg("sigma2"), py::arg("rho"),
+          py::arg("T"), py::arg("n_paths") = 500000, py::arg("seed") = 12345, py::arg("q1") = 0.0,
+          py::arg("q2") = 0.0, py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

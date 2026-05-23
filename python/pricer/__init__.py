@@ -48,6 +48,11 @@ from ._pricer import (  # noqa: F401
     sabr_price_mc,
     equally_spaced_dates,
     bermudan_lsm,
+    geometric_basket_price,
+    basket_price_mc,
+    margrabe_exchange_price,
+    spread_kirk_price,
+    spread_price_mc,
     __version__,
 )
 
@@ -92,5 +97,10 @@ __all__ = [
     "sabr_price_mc",
     "equally_spaced_dates",
     "bermudan_lsm",
+    "geometric_basket_price",
+    "basket_price_mc",
+    "margrabe_exchange_price",
+    "spread_kirk_price",
+    "spread_price_mc",
     "__version__",
 ]

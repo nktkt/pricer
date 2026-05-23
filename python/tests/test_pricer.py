@@ -135,6 +135,24 @@ def main():
                                 n_paths=200_000)
     assert eur_put < b_irr < b50 + 0.1
 
+    # Multi-asset: geometric basket MC matches the closed form; n=1 == Black–Scholes.
+    from pricer import AverageType as AT
+    Sv, wv, sigv = [100.0, 95.0, 105.0], [1 / 3, 1 / 3, 1 / 3], [0.20, 0.25, 0.30]
+    corr = [[1.0, 0.5, 0.3], [0.5, 1.0, 0.4], [0.3, 0.4, 1.0]]
+    approx(pricer.geometric_basket_price(OptionType.Call, [100.0], [1.0], 100.0, r, [0.20],
+                                         [[1.0]], T), call, 1e-9)
+    gcf = pricer.geometric_basket_price(OptionType.Call, Sv, wv, 100.0, r, sigv, corr, T)
+    gmc = pricer.basket_price_mc(OptionType.Call, AT.Geometric, Sv, wv, 100.0, r, sigv, corr, T,
+                                 n_paths=400_000)
+    approx(gmc, gcf, 0.10)
+
+    # Spread / exchange: Kirk reduces to Margrabe at K=0, and MC matches Margrabe.
+    marg = pricer.margrabe_exchange_price(100.0, 100.0, 0.20, 0.30, 0.4, T)
+    approx(pricer.spread_kirk_price(OptionType.Call, 100.0, 100.0, 0.0, r, 0.20, 0.30, 0.4, T),
+           marg, 1e-10)
+    approx(pricer.spread_price_mc(OptionType.Call, 100.0, 100.0, 0.0, r, 0.20, 0.30, 0.4, T,
+                                  n_paths=400_000), marg, 0.10)
+
     print("all python tests passed; pricer", pricer.__version__)
 
 

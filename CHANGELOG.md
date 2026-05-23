@@ -6,6 +6,29 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.12.0] — 2026-05-23
+
+### Added
+- **Multi-asset options** (`basket.hpp`): options on several correlated
+  underlyings, with correlated Geometric Brownian Motion driven by a Cholesky
+  factor of the correlation matrix and the counter-based RNG.
+  - **Basket** (weighted average of the assets): an exact lognormal closed form
+    for the geometric-average basket (`geometric_basket_price` — the geometric
+    average of correlated GBMs is itself lognormal) plus a Monte Carlo engine for
+    arithmetic *and* geometric averaging (`basket_price_mc`). The geometric basket
+    MC cross-checks the closed form, the arithmetic basket sits above the geometric
+    one (AM ≥ GM), and the basket value rises with correlation.
+  - **Spread / exchange** (two assets): Margrabe's exact exchange-option formula
+    for `max(S1 − S2, 0)` (`margrabe_exchange_price`), Kirk's approximation for the
+    spread `max(S1 − S2 − K, 0)` (`spread_kirk_price`, which reduces to Margrabe
+    exactly at `K = 0`), and a correlated two-asset Monte Carlo engine
+    (`spread_price_mc`). Margrabe matches Kirk(K=0) and the MC, Kirk tracks the MC
+    for non-zero strikes, and the spread value falls as correlation rises.
+  - Exposed through the Python bindings (`geometric_basket_price`,
+    `basket_price_mc`, `margrabe_exchange_price`, `spread_kirk_price`,
+    `spread_price_mc`); all carry the continuous dividend yield `q`. Covered by
+    `test_basket` and demonstrated in `examples/basket_options.cpp`.
+
 ## [0.11.0] — 2026-05-23
 
 ### Added
@@ -209,7 +232,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/nktkt/pricer/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/nktkt/pricer/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/nktkt/pricer/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/nktkt/pricer/compare/v0.8.0...v0.9.0

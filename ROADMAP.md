@@ -78,7 +78,11 @@ Make the JIT compiler the real core.
       analytic references the DSL payoffs are validated against. Early-exercise
       coverage: `american.hpp` (CRR binomial tree + Longstaff–Schwartz LSM) and
       `bermudan.hpp` (LSM over any finite exercise schedule — one date reproduces
-      the European price, many approach the American one).)*
+      the European price, many approach the American one). `basket.hpp` adds
+      multi-asset options on correlated GBM (Cholesky) — the exact
+      geometric-basket and Margrabe exchange-option closed forms anchor the
+      arithmetic-basket / spread Monte Carlo (Kirk's approximation for non-zero
+      spread strikes).)*
 
 ### Phase 3 — Performance & scale-up (6–9 months)
 Single-node speed.

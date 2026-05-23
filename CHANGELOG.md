@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Project docs**: `ARCHITECTURE.md` (how the layers, the one-AST/two-backend
+  DSL, the determinism model and the surfaces fit together) and `CONTRIBUTING.md`
+  (build/test, conventions, adding a feature, and the release process), linked
+  from the README.
+
 ## [0.5.0] — 2026-05-23
 
 ### Added

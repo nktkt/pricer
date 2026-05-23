@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-05-23
+
 ### Added
 - **Continuous dividend yield (`q`)** (Merton extension) across the closed-form
   pricer and Greeks (closed-form, forward-AD and adjoint-AD), implied vol, the
@@ -144,7 +146,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/nktkt/pricer/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/nktkt/pricer/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/nktkt/pricer/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nktkt/pricer/compare/v0.4.0...v0.5.0

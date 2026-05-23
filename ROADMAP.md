@@ -79,6 +79,10 @@ Single-node speed.
 - [x] Variance reduction: antithetic, control variates, Sobol QMC
 - **Exit criteria:** ≥10× over the Phase 1 baseline on CPU; GPU path for the
   vanilla MC engine.
+      *(≥10× CPU half DONE: `parallel_simd.hpp` stacks SIMD × multicore into one
+      deterministic engine — `examples/scale_benchmark.cpp` measures ~12.8× over
+      the Phase-1 stateful-mt19937 baseline on a 10-core machine. GPU path still
+      open, so the phase stays open.)*
 
 ### Phase 4 — Risk & calibration (9–12 months)
 From price to risk.

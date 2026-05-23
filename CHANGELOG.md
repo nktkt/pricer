@@ -13,6 +13,11 @@ All notable changes to this project are documented here. The format follows
   counter-based Monte Carlo engine (`mc::price_terminal_cb_simd`) that generates
   W=4 paths per step. ~2.2× over the stateful baseline / ~1.3× over the scalar
   counter-based engine, with results matching to floating-point tolerance.
+- **Multicore + SIMD engine** (`parallel_simd.hpp`):
+  `mc::price_terminal_cb_parallel_simd` stacks SIMD path generation across all
+  cores with a deterministic, thread-count-independent (bit-identical) result.
+  `examples/scale_benchmark.cpp` shows the full speedup ladder — ~12.8× over the
+  Phase-1 baseline on a 10-core machine, meeting the Phase-3 ≥10× CPU target.
 
 ## [0.2.0] — 2026-05-23
 

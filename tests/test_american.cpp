@@ -44,6 +44,23 @@ int main() {
     const double lsm_p2 = lsm_american(OptionType::Put, S, K, r, sigma, T, 80'000, 50);
     check::is_true("LSM reproducible run-to-run", lsm_p == lsm_p2);
 
+    // --- binomial Greeks (European) match the closed-form Greeks ---
+    const Greeks bg = binomial_greeks(OptionType::Call, S, K, r, sigma, T, 2000, false);
+    const Greeks cf = black_scholes_greeks(OptionType::Call, S, K, r, sigma, T);
+    check::approx("binomial delta vs BS", bg.delta, cf.delta, 5e-3);
+    check::approx("binomial gamma vs BS", bg.gamma, cf.gamma, 5e-3);
+    check::approx("binomial vega vs BS", bg.vega, cf.vega, 0.2);
+    check::approx("binomial theta vs BS", bg.theta, cf.theta, 0.1);
+    check::approx("binomial rho vs BS", bg.rho, cf.rho, 0.5);
+
+    // --- American Greeks: call (no div) matches European; put has the right signs ---
+    const Greeks am_c = binomial_greeks(OptionType::Call, S, K, r, sigma, T, 2000, true);
+    check::approx("American call delta == European", am_c.delta, bg.delta, 5e-3);
+    const Greeks am_p = binomial_greeks(OptionType::Put, S, K, r, sigma, T, 2000, true);
+    check::is_true("American put delta < 0", am_p.delta < 0.0);
+    check::is_true("American put gamma > 0", am_p.gamma > 0.0);
+    check::is_true("American put vega > 0", am_p.vega > 0.0);
+
     // --- binomial converges: more steps shrink the error vs Black–Scholes ---
     const double coarse = binomial_price(OptionType::Call, S, K, r, sigma, T, 50, false);
     const double fine = binomial_price(OptionType::Call, S, K, r, sigma, T, 2000, false);

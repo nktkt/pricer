@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **American option Greeks** (`american.hpp` `binomial_greeks`): delta, gamma and
+  theta read from a single CRR tree pass (finite differences over adjacent
+  lattice nodes), with vega and rho by central-difference re-pricing. The European
+  mode matches the closed-form Black–Scholes Greeks; `examples/american_option.cpp`
+  prints the American put's Greeks.
+
 ## [0.7.0] — 2026-05-23
 
 ### Added

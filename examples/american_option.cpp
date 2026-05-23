@@ -46,6 +46,12 @@ int main() {
 
     // --- Deep in-the-money American put ~ intrinsic (exercise immediately) ---
     const double deep = binomial_price(OptionType::Put, 60.0, K, r, sigma, T, steps, true);
-    std::printf("Deep-ITM American put (S=60, K=100): %.4f   (intrinsic K-S = %.1f)\n", deep, 40.0);
+    std::printf("Deep-ITM American put (S=60, K=100): %.4f   (intrinsic K-S = %.1f)\n\n", deep, 40.0);
+
+    // --- American put Greeks, read from the same binomial tree ---
+    const Greeks g = binomial_greeks(OptionType::Put, S, K, r, sigma, T, steps, true);
+    std::printf("American put Greeks (binomial, %d steps):\n", steps);
+    std::printf("  delta=%.4f  gamma=%.4f  vega=%.4f  theta=%.4f  rho=%.4f\n",
+                g.delta, g.gamma, g.vega, g.theta, g.rho);
     return 0;
 }

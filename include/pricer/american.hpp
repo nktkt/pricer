@@ -58,6 +58,56 @@ inline double binomial_price(OptionType type, double S, double K, double r, doub
     return v[0];
 }
 
+// Greeks from a single CRR tree pass. The lattice already holds option values at
+// neighbouring spot/time nodes, so delta, gamma and theta come "for free" by
+// finite differences over those nodes (the standard Hull construction; with CRR
+// u·d = 1 the middle step-2 node sits at the original spot, giving theta over
+// 2·dt). Vega and rho — sensitivities to model inputs, not lattice coordinates —
+// are central differences from re-pricing. Works for European and American.
+inline Greeks binomial_greeks(OptionType type, double S, double K, double r, double sigma, double T,
+                              int steps, bool american) {
+    if (steps < 3) steps = 3;  // need the step-2 layer for gamma/theta
+    const double dt = T / steps;
+    const double u = std::exp(sigma * std::sqrt(dt));
+    const double d = 1.0 / u;
+    const double disc = std::exp(-r * dt);
+    const double p = (std::exp(r * dt) - d) / (u - d);
+
+    std::vector<double> v(static_cast<std::size_t>(steps) + 1);
+    for (int i = 0; i <= steps; ++i)
+        v[i] = vanilla_payoff(type, S * std::pow(u, steps - i) * std::pow(d, i), K);
+
+    double v00 = 0, v10 = 0, v11 = 0, v20 = 0, v21 = 0, v22 = 0;  // captured early layers
+    for (int step = steps - 1; step >= 0; --step) {
+        for (int i = 0; i <= step; ++i) {
+            double val = disc * (p * v[i] + (1.0 - p) * v[i + 1]);
+            if (american)
+                val = std::max(val, vanilla_payoff(type, S * std::pow(u, step - i) * std::pow(d, i), K));
+            v[i] = val;
+        }
+        if (step == 2) { v20 = v[0]; v21 = v[1]; v22 = v[2]; }
+        if (step == 1) { v10 = v[0]; v11 = v[1]; }
+    }
+    v00 = v[0];
+
+    Greeks g{};
+    g.price = v00;
+    g.delta = (v10 - v11) / (S * u - S * d);
+    const double su2 = S * u * u, sd2 = S * d * d;
+    const double delta_up = (v20 - v21) / (su2 - S);
+    const double delta_dn = (v21 - v22) / (S - sd2);
+    g.gamma = (delta_up - delta_dn) / (0.5 * (su2 - sd2));
+    g.theta = (v21 - v00) / (2.0 * dt);  // v21 is at spot S, two steps (2·dt) later
+
+    // Vega (per 1.0 of vol) and rho (per 1.0 of rate) by central differences.
+    const double hs = 0.01, hr = 1e-4;
+    g.vega = (binomial_price(type, S, K, r, sigma + hs, T, steps, american) -
+              binomial_price(type, S, K, r, sigma - hs, T, steps, american)) / (2.0 * hs);
+    g.rho = (binomial_price(type, S, K, r + hr, sigma, T, steps, american) -
+             binomial_price(type, S, K, r - hr, sigma, T, steps, american)) / (2.0 * hr);
+    return g;
+}
+
 namespace detail {
 
 // Solve a 3x3 system A x = b in place (Gaussian elimination, partial pivoting).

@@ -22,6 +22,7 @@
 #include "pricer/portfolio.hpp"
 #include "pricer/qmc.hpp"
 #include "pricer/risk.hpp"
+#include "pricer/sabr.hpp"
 #include "pricer/simd_mc.hpp"
 #include "pricer/xva.hpp"
 
@@ -37,7 +38,7 @@ static auto payoff_for(OptionType t, double K) {
 
 PYBIND11_MODULE(_pricer, m) {
     m.doc() = "pricer — option pricing & risk engine (C++ core via pybind11)";
-    m.attr("__version__") = "0.9.0";
+    m.attr("__version__") = "0.10.0";
 
     py::enum_<OptionType>(m, "OptionType")
         .value("Call", OptionType::Call)
@@ -116,6 +117,26 @@ PYBIND11_MODULE(_pricer, m) {
         .def_readonly("times", &ExposureProfile::times)
         .def_readonly("epe", &ExposureProfile::epe)
         .def_readonly("ene", &ExposureProfile::ene);
+
+    // --- SABR stochastic-volatility model ---
+    py::class_<SabrParams>(m, "SabrParams")
+        .def(py::init([](double alpha, double beta, double rho, double nu) {
+                 return SabrParams{alpha, beta, rho, nu};
+             }),
+             py::arg("alpha"), py::arg("beta"), py::arg("rho"), py::arg("nu"))
+        .def_readwrite("alpha", &SabrParams::alpha)
+        .def_readwrite("beta", &SabrParams::beta)
+        .def_readwrite("rho", &SabrParams::rho)
+        .def_readwrite("nu", &SabrParams::nu)
+        .def("__repr__", [](const SabrParams& p) {
+            return "SabrParams(alpha=" + std::to_string(p.alpha) + ", beta=" +
+                   std::to_string(p.beta) + ", rho=" + std::to_string(p.rho) + ", nu=" +
+                   std::to_string(p.nu) + ")";
+        });
+
+    py::class_<SabrFit>(m, "SabrFit")
+        .def_readonly("params", &SabrFit::params)
+        .def_readonly("rms_vol_error", &SabrFit::rms_vol_error);
 
     // --- closed form ---
     m.def("black_scholes_price", &black_scholes_price, py::arg("type"), py::arg("S"),
@@ -199,6 +220,18 @@ PYBIND11_MODULE(_pricer, m) {
           py::arg("r"), py::arg("sigma"), py::arg("T"), py::arg("n_steps") = 250,
           py::arg("n_paths") = 500000, py::arg("seed") = 12345, py::arg("q") = 0.0,
           py::arg("continuity_correction") = true, py::call_guard<py::gil_scoped_release>());
+
+    // --- SABR: implied vol (Hagan), Black-76 pricing, calibration, SDE Monte Carlo ---
+    m.def("sabr_implied_vol", &sabr_implied_vol, py::arg("F"), py::arg("K"), py::arg("T"),
+          py::arg("params"));
+    m.def("sabr_black_price", &sabr_black_price, py::arg("type"), py::arg("F"), py::arg("K"),
+          py::arg("T"), py::arg("df"), py::arg("params"));
+    m.def("calibrate_sabr", &calibrate_sabr, py::arg("F"), py::arg("T"), py::arg("strikes"),
+          py::arg("market_vols"), py::arg("beta"),
+          py::arg("guess") = SabrParams{0.2, 0.5, 0.0, 0.3});
+    m.def("sabr_price_mc", &sabr_price_mc, py::arg("type"), py::arg("F"), py::arg("K"), py::arg("T"),
+          py::arg("df"), py::arg("params"), py::arg("n_steps") = 200, py::arg("n_paths") = 500000,
+          py::arg("seed") = 12345, py::call_guard<py::gil_scoped_release>());
 
     // --- risk ---
     m.def("var_es", &var_es, py::arg("pnl"), py::arg("confidence") = 0.99);

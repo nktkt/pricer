@@ -6,6 +6,30 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-05-23
+
+### Added
+- **SABR stochastic-volatility model** (`sabr.hpp`): the industry-standard model
+  for interest-rate and FX smiles.
+  - **Hagan 2002 implied-volatility approximation** (`sabr_implied_vol`): the
+    closed-form Black (lognormal) vol for a strike on a forward, with the
+    at-the-money branch as the continuous K → F limit; reduces to a flat smile
+    `σ = α` when `β = 1, ν = 0`.
+  - **Option pricing** (`sabr_black_price`): Black-76 on the forward using the
+    SABR implied vol.
+  - **Calibration** (`calibrate_sabr`): fits `(α, ρ, ν)` at a fixed `β` to a smile
+    of market vols via the shared Levenberg–Marquardt solver, seeding `α` from the
+    ATM vol (`α ≈ σ_ATM·F^(1-β)`) so it is robust across `β` scales — a model
+    round-trip recovers the parameters to ~1e-12.
+  - **Monte Carlo** (`sabr_price_mc`): simulates the SABR SDE directly (the vol
+    process is lognormal so it is stepped exactly; the forward uses a
+    full-truncation Euler step) with the counter-based RNG, cross-checking the
+    asymptotic Hagan price.
+  - Exposed through the Python bindings (`SabrParams`, `SabrFit`,
+    `sabr_implied_vol`, `sabr_black_price`, `calibrate_sabr`, `sabr_price_mc`);
+    `test_sabr` and `examples/sabr_smile.cpp` cover smile shape, calibration and
+    the MC cross-check.
+
 ## [0.9.0] — 2026-05-23
 
 ### Added
@@ -169,7 +193,8 @@ Initial public release, built up in phases.
 - Examples for every topic, a CTest suite, a CMake build, and CI (C++ and
   Python) on Linux and macOS.
 
-[Unreleased]: https://github.com/nktkt/pricer/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/nktkt/pricer/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/nktkt/pricer/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/nktkt/pricer/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/nktkt/pricer/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/nktkt/pricer/compare/v0.6.0...v0.7.0

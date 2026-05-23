@@ -18,6 +18,8 @@ from ._pricer import (  # noqa: F401
     DiscountCurve,
     SurvivalCurve,
     ExposureProfile,
+    SabrParams,
+    SabrFit,
     black_scholes_price,
     black_scholes_call,
     black_scholes_put,
@@ -40,6 +42,10 @@ from ._pricer import (  # noqa: F401
     barrier_price_mc,
     lookback_floating_price,
     lookback_floating_price_mc,
+    sabr_implied_vol,
+    sabr_black_price,
+    calibrate_sabr,
+    sabr_price_mc,
     __version__,
 )
 
@@ -54,6 +60,8 @@ __all__ = [
     "DiscountCurve",
     "SurvivalCurve",
     "ExposureProfile",
+    "SabrParams",
+    "SabrFit",
     "black_scholes_price",
     "black_scholes_call",
     "black_scholes_put",
@@ -76,5 +84,9 @@ __all__ = [
     "barrier_price_mc",
     "lookback_floating_price",
     "lookback_floating_price_mc",
+    "sabr_implied_vol",
+    "sabr_black_price",
+    "calibrate_sabr",
+    "sabr_price_mc",
     "__version__",
 ]

@@ -2,7 +2,7 @@
 
 A header-only C++17 quant library: Black–Scholes, Monte Carlo, American
 (early-exercise) and path-dependent exotics (Asian / barrier / lookback) pricing,
-model calibration (SVI, Heston, Dupire) and exact Greeks by automatic
+model calibration (SVI, SABR, Heston, Dupire) and exact Greeks by automatic
 differentiation, counterparty risk (xVA), and a **runtime payoff compiler built
 on LLVM JIT** — scaled across SIMD lanes, CPU cores and processes.
 
@@ -44,6 +44,7 @@ include/pricer/   header-only core library
   svi.hpp                SVI smile model + least-squares calibration (uses optimize.hpp)
   quadrature.hpp         Gauss–Legendre numerical integration
   heston.hpp             Heston stochastic-vol pricing (char. function) + calibration
+  sabr.hpp               SABR smile model: Hagan implied-vol + Black-76 + calibration + SDE MC
   dual.hpp               forward-mode automatic differentiation (dual numbers)
   greeks_ad.hpp          exact Black–Scholes Greeks via AD (matches closed form)
   adjoint.hpp            reverse-mode AD (AAD): all first-order Greeks in one sweep
@@ -81,6 +82,7 @@ server/           REST pricing service (POSIX sockets, no dependencies)
 | `vol_surface_demo` | Curve & vol surface | Discount curve, implied-vol surface, smile calibration |
 | `svi_calibration` | SVI model calibration | Fit an SVI smile to market quotes via Levenberg–Marquardt |
 | `heston_calibration` | Heston model calibration | Fit Heston to an option grid by least squares |
+| `sabr_smile` | SABR smile model | Hagan implied-vol smile, calibration round-trip, and an SDE Monte Carlo cross-check |
 | `ad_greeks` | Greeks by auto-diff | Forward-mode AD Greeks vs. closed form (machine precision) |
 | `aad_greeks` | Greeks by adjoint AD | All first-order Greeks from one reverse-mode backward sweep |
 | `local_vol_demo` | Dupire local vol | Local volatility recovered from a call-price surface |

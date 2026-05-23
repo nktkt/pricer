@@ -97,7 +97,10 @@ From price to risk.
       *(tape-based reverse-mode AAD: first-order Greeks in one backward sweep; gamma via forward AD; 2nd-order adjoint is future)*
 - [x] Yield-curve and volatility-surface construction
 - [x] Model calibration (Heston, local vol) with least-squares solvers
-      *(LM solver + SVI smile + Heston char-function calibration + Dupire local vol)*
+      *(LM solver + SVI smile + Heston char-function calibration + Dupire local vol;
+      `sabr.hpp` adds the SABR smile model — the Hagan 2002 closed-form implied vol,
+      Black-76 pricing, LM calibration of (α,ρ,ν) at fixed β (ATM-seeded so it is
+      scale-robust), and an SDE Monte Carlo cross-check of the asymptotic formula)*
 - [x] Portfolio risk: VaR/ES, scenario engine, basic xVA
       *(VaR/ES `risk.hpp`; `xva.hpp` — GBM exposure-simulation scenario engine + CVA/DVA/BCVA against a hazard-rate survival curve)*
 - **Exit criteria:** full Greeks for a multi-asset book in one pass; calibration

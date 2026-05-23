@@ -103,6 +103,25 @@ def main():
     approx(lb_mc, lb, 0.30)
     assert lb > call, "a floating-strike lookback call dominates the vanilla call"
 
+    # SABR: beta=1, nu=0 is a flat lognormal smile; calibration recovers the params.
+    F, Tf = 100.0, 1.0
+    flat = pricer.SabrParams(0.25, 1.0, 0.0, 0.0)
+    approx(pricer.sabr_implied_vol(F, 80.0, Tf, flat), 0.25, 1e-10)
+    truth = pricer.SabrParams(0.22, 0.5, -0.35, 0.45)
+    ks = [70.0, 85.0, 100.0, 115.0, 130.0, 150.0]
+    mkt = [pricer.sabr_implied_vol(F, k, Tf, truth) for k in ks]
+    fit = pricer.calibrate_sabr(F, Tf, ks, mkt, beta=0.5)
+    approx(fit.params.alpha, 0.22, 1e-3)
+    approx(fit.params.rho, -0.35, 1e-3)
+    approx(fit.params.nu, 0.45, 1e-3)
+    # Forward put-call parity through the SABR/Black-76 pricer.
+    sc = pricer.sabr_black_price(OptionType.Call, F, 100.0, Tf, 1.0, truth)
+    sp = pricer.sabr_black_price(OptionType.Put, F, 100.0, Tf, 1.0, truth)
+    approx(sc - sp, F - 100.0, 1e-9)
+    # The SABR SDE Monte Carlo cross-checks the Hagan/Black-76 price (moderate tol).
+    approx(pricer.sabr_price_mc(OptionType.Call, F, 100.0, Tf, 1.0, truth, n_paths=400_000),
+           sc, 0.25)
+
     print("all python tests passed; pricer", pricer.__version__)
 
 
